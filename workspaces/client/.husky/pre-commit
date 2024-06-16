@@ -1,0 +1,5 @@
+npx lint-staged
+
+// Aqui puedes agregar los scripts que quieras correr
+// cuando hagas un commit, por ejemplo:
+npm run test
