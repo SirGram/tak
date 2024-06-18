@@ -21,9 +21,10 @@ type GLTFResult = GLTF & {
 type Props = GroupProps & {
     isSelected: boolean;
     opacity: number;
+    isStanding: boolean;
 };
 
-export function Whitestone({ isSelected, opacity, ...props }: Props) {
+export function Whitestone({ isSelected, opacity, isStanding, ...props }: Props) {
     const { nodes, materials } = useGLTF('/whitestone.glb') as GLTFResult;
 
     const { selectedColor } = useGlobalState();
@@ -34,6 +35,9 @@ export function Whitestone({ isSelected, opacity, ...props }: Props) {
         newMaterial.transparent = true;
         return newMaterial;
     }, [materials.Material, opacity]);
+
+    const rotation = isStanding ? [Math.PI / 2, 0, 0] : [0, 0, 0];
+    const position = isStanding ? [0.2, 0.4, 0.3] : [0.2, -0.9, 0.3];
     return (
         <group {...props} dispose={null}>
             <mesh
@@ -41,7 +45,8 @@ export function Whitestone({ isSelected, opacity, ...props }: Props) {
                 receiveShadow
                 geometry={nodes.Cube002.geometry}
                 material={material}
-                position={[0.2, -0.9, 0.3]}
+                position={position}
+                rotation={rotation}
                 scale={[1, 0.9, 1]}>
                 {isSelected && <meshStandardMaterial attach="material" color={selectedColor} />}
             </mesh>

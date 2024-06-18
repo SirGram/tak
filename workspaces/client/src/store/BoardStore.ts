@@ -7,8 +7,14 @@ export type TBoard = Tile[];
 export type BoardSize = 3 | 4 | 5 | 6;
 
 interface BoardStore {
-    tiles: TBoard;
+    tiles: TBoard;    
+    stack: Piece3D[] ;
+    setStack: (value: Piece3D[]) => void;
     pieces: Piece3D[];
+    selectedPiece: Piece3D | null;
+    setSelectedPiece: (value: Piece3D | null) => void;
+    possibleMoves: Position[];
+    setPossibleMoves: (moves: Position[]) => void;
     changePieces: (updatedPieces: Piece3D[]) => void;
     changePiecePosition: (pieceId: string, newPosition: Vector3) => void;
     changePieceSelectable: (pieceId: string, value: boolean) => void;
@@ -20,8 +26,20 @@ interface BoardStore {
 
 export const useBoardStore = create<BoardStore>((set) => ({
     tiles: initializeBoard(5),
+    
+    stack: [],
+    setStack: (newStack) => set({ stack: newStack }),
+
     boardSize: 5,
-    pieces: demoPieces,
+    pieces: initialPieces,
+    selectedPiece: null,
+    setSelectedPiece: (piece) => {
+        set({ selectedPiece: piece });
+    },
+    possibleMoves: [],
+    setPossibleMoves: (moves) => {
+        set({ possibleMoves: moves });
+    },
     changePieces: (updatedPieces) => {
         set({ pieces: updatedPieces });
     },
@@ -55,18 +73,38 @@ export const useBoardStore = create<BoardStore>((set) => ({
     },
     movePiece(pieceId: string, newPosition: Position) {
         set((state) => {
-            const updatedTiles = state.tiles.map((tile) => {
-                const pieceIndex = tile.pieces.findIndex((p) => p === pieceId);
-                if (pieceIndex !== -1) {
-                    const pieceToMove = tile.pieces.splice(pieceIndex, 1)[0];
-                    const targetTile = state.tiles.find((t) => t.position === newPosition);
-                    if (targetTile) {
-                        targetTile.pieces.push(pieceToMove);
-                    }
-                }
-                return tile;
-            });
+            const currentTileIndex = state.tiles.findIndex((tile) =>
+                tile.pieces.includes(pieceId)
+            );    
+            if (currentTileIndex === -1) {
+                return state;
+            }    
+    
+            const targetTileIndex = state.tiles.findIndex((tile) =>
+                tile.position.x === newPosition.x && tile.position.y === newPosition.y
+            );    
+    
+            if (targetTileIndex === -1) {
+                return state;
+            }
+    
+            const updatedTiles = [...state.tiles];
+    
+            // Find the index of the piece within the current tile
+            const pieceIndex = updatedTiles[currentTileIndex].pieces.indexOf(pieceId);    
+    
+            // If the piece is found within the current tile, move it
+            if (pieceIndex !== -1) {
+                // Remove the piece from the current tile
+                updatedTiles[currentTileIndex].pieces.splice(pieceIndex, 1);
+                // Add the piece to the target tile
+                updatedTiles[targetTileIndex].pieces.push(pieceId);
+            }
+    
+            // Return the new state with updated tiles
             return { tiles: updatedTiles };
         });
-    },
+    }
+    
+    
 }));

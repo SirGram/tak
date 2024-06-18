@@ -22,9 +22,10 @@ type GLTFResult = GLTF & {
 type Props = GroupProps & {
     isSelected: boolean;
     opacity: number;
+    isStanding:boolean
 };
 
-export function Blackstone({ isSelected, opacity, ...props }: Props) {
+export function Blackstone({ isSelected, opacity, isStanding, ...props }: Props) {
     const { nodes, materials } = useGLTF('/blackstone.glb') as GLTFResult;
 
     const { selectedColor } = useGlobalState();
@@ -35,6 +36,9 @@ export function Blackstone({ isSelected, opacity, ...props }: Props) {
         newMaterial.transparent = true;
         return newMaterial;
     }, [materials, opacity]);
+    
+    const rotation = isStanding ? [-Math.PI / 2, 0, 0] : [0, 0, 0];
+    const position = isStanding ? [0.2, 0.3, 0.3] : [0.2, -0.9, 0.3];
 
     return (
         <group {...props} dispose={null}>
@@ -43,9 +47,9 @@ export function Blackstone({ isSelected, opacity, ...props }: Props) {
                 receiveShadow
                 geometry={nodes.Cylinder003.geometry}
                 material={material}
-                position={[0.2, -0.9, 0.3]}
+                position={position}
                 scale={[1.647, 0.318, 1.647]}
-                rotation={[0, -0.12, 0]}>
+                rotation={rotation}>
                 {isSelected && <meshStandardMaterial attach="material" color={selectedColor} />}
             </mesh>
         </group>
