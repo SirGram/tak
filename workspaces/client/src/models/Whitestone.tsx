@@ -7,7 +7,7 @@ import React, { useMemo, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { GLTF } from 'three-stdlib';
 import { GroupProps } from '@react-three/fiber';
-import { useGlobalState } from '../store/store';
+import { useClientStore } from '../store/ClientStore';
 
 type GLTFResult = GLTF & {
     nodes: {
@@ -27,7 +27,7 @@ type Props = GroupProps & {
 export function Whitestone({ isSelected, opacity, isStanding, ...props }: Props) {
     const { nodes, materials } = useGLTF('/whitestone.glb') as GLTFResult;
 
-    const { selectedColor } = useGlobalState();
+    const { selectedColor } = useClientStore();
 
     const material = useMemo(() => {
         const newMaterial = materials.Material.clone();

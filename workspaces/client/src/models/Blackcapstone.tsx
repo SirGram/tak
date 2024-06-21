@@ -7,7 +7,7 @@ import React, { useMemo, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { GLTF } from 'three-stdlib';
 import { GroupProps } from '@react-three/fiber';
-import { useGlobalState } from '../store/store';
+import { useClientStore } from '../store/ClientStore';
 
 type GLTFResult = GLTF & {
     nodes: {
@@ -20,20 +20,20 @@ type GLTFResult = GLTF & {
 
 type Props = GroupProps & {
     isSelected: boolean;
-    opacity:number
+    opacity: number;
 };
 
 export function Blackcapstone({ isSelected, opacity, ...props }: Props) {
     const { nodes, materials } = useGLTF('/blackcapstone.glb') as GLTFResult;
-   
-     const material = useMemo(() => {
+
+    const material = useMemo(() => {
         const newMaterial = materials['Material.003'].clone();
         newMaterial.opacity = opacity;
         newMaterial.transparent = true;
         return newMaterial;
     }, [materials, opacity]);
 
-    const { selectedColor } = useGlobalState();
+    const { selectedColor } = useClientStore();
     return (
         <group {...props} dispose={null}>
             <mesh

@@ -6,8 +6,8 @@ import * as THREE from 'three';
 import React, { useMemo, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { GLTF } from 'three-stdlib';
-import { useGlobalState } from '../store/store';
 import { GroupProps } from '@react-three/fiber';
+import { useClientStore } from '../store/ClientStore';
 
 type GLTFResult = GLTF & {
     nodes: {
@@ -26,7 +26,8 @@ type Props = GroupProps & {
 export function Whitecapstone({ isSelected, opacity, ...props }: Props) {
     const { nodes, materials } = useGLTF('/whitecapstone.glb') as GLTFResult;
 
-    const { selectedColor } = useGlobalState();
+    const { selectedColor } = useClientStore();
+    
     const material = useMemo(() => {
         const newMaterial = materials.Material;
         newMaterial.opacity = opacity;

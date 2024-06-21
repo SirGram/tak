@@ -1,13 +1,26 @@
 import { Fragment } from 'react/jsx-runtime';
 import { BoardModel } from '../models/BoardModel';
-import { Color, ThreeEvent, Vector3 } from '@react-three/fiber';
+import { Color, ThreeEvent } from '@react-three/fiber';
 import { useCallback, useEffect, useState } from 'react';
-import { useGlobalState } from '../store/store';
-import { useBoardStore } from '../store/BoardStore';
-import { Piece3D, Position, Tile } from '../logic';
-import { calculateMoves, checkRoadWin, getPiece, getTile, isBoardFull, isTileEmpty } from '../logic/board';
-import { Candle } from '../models/candle';
+import { useGameStore } from '../store/GameStore';
+import { useClientStore } from '../store/ClientStore';
+import { Piece3D, Position, Tile, Vector3 } from '../logic';
+import {
+    calculateMoves,
+    calculatePieceHeight,
+    getFlatstones,
+    getPiece,
+    getTile,
+    getTileFromPiece,
+    isBoardFull,
+    isTileEmpty,
+} from '../logic/board';
+import { Candle } from '../models/Candle';
 import { update } from '@react-spring/three';
+import Pieces from './Pieces';
+import { makeMove } from '../socket/SocketManager';
+import { useSocketStore } from '../store/SocketStore';
+import { Position3D } from '../../../shared/types';
 
 type TileProps = {
     position: [x: number, y: number, z: number];
@@ -39,74 +52,46 @@ function TileModel({ position, color, onClick, isMovePossible }: TileProps) {
 }
 function BoardTable() {
     return (
-        <mesh position={[2, -0.29, 2]}>
+        <mesh position={[2, -0.29, 2]} receiveShadow>
             <boxGeometry args={[10, 0.1, 10]} />
-            <meshStandardMaterial color={'red'} opacity={0.07} transparent={true} />
+            <meshStandardMaterial color={'#9F896C'} opacity={0.5} transparent={true} />
         </mesh>
     );
 }
 
-function calculatePieceHeight(pieceId: string, tilePieces: Piece3D[]): number {
-    let extraHeight = 0;
-    for (const piece of tilePieces) {
-        if (piece.id == pieceId) break;
-        extraHeight += piece.height;
-    }
-    return extraHeight;
-}
-
 export default function Board() {
-    const {
-        tiles,
-        selectedPiece,
-        setSelectedPiece,
-        possibleMoves,
-        setPossibleMoves,
-        movePiece,
-        placePiece,
-        changePiecePosition,
-        changePieceSelectable,
-        pieces,
-        changePieces,
-        stack,
-        setStack,
-    } = useBoardStore();
-    const {
-        currentTurnPhase,
-        setCurrentTurnPhase,
-        switchPlayer,
-        currentPlayer,
-        roundNumber,
-        setRoundNumber,
-        boardSize,
-        setWinner,
-    } = useGlobalState();
+    const { room, playerColor, gameState } = useSocketStore();
+    const { stack, setStack, showRound } = useClientStore();
 
-    const selectTileStack = (tile: Tile, pieces: Piece3D[]) => {
-        const piecesToSelect = tile.pieces
-            .map((pieceId) => pieces.find((piece) => piece.id === pieceId))
-            .filter((piece): piece is Piece3D => !!piece);
+    console.log(gameState);
 
-        if (piecesToSelect.length > 0) {
-            //select stack where last piece is from player
-            const isLastPieceFromPlayer =
-                piecesToSelect[piecesToSelect.length - 1].color == currentPlayer;
-            if (!isLastPieceFromPlayer) return;
-            setStack(piecesToSelect.slice(-boardSize));
-        }
-    };
+    const [selectedPiece, setSelectedPiece] = useState<Piece3D | null>(null);
+    const [possibleMoves, setPossibleMoves] = useState<Position[]>([]);
 
-    const [isRoundOver, setIsRoundOver] = useState(false);
     const directions = [
         { x: 0, y: 1 },
         { x: 0, y: -1 },
         { x: -1, y: 0 },
         { x: 1, y: 0 },
     ];
-
     const [allowedDirections, setAllowedDirections] = useState<Position[]>(directions);
 
-    type Position3D = [x: number, y: number, z: number];
+    const canDoAction =
+        playerColor === gameState?.currentPlayer && showRound == gameState.history.length - 1;
+
+    const selectTileStack = (tile: Tile, pieces: Piece3D[]) => {
+        const piecesToSelect = tile.pieces
+            .map((pieceId: string) => pieces.find((piece) => piece.id === pieceId))
+            .filter((piece: Piece3D | null): piece is Piece3D => !!piece);
+
+        if (piecesToSelect.length > 0) {
+            //select stack where last piece is from player
+            const isLastPieceFromPlayer =
+                piecesToSelect[piecesToSelect.length - 1].color == playerColor;
+            if (!isLastPieceFromPlayer) return;
+            setStack(piecesToSelect.slice(-gameState!.boardSize));
+        }
+    };
 
     const updateAllowedDirections = (lastPosition: Position3D) => {
         const dx = lastPosition[0] - selectedPiece!.position[0];
@@ -120,6 +105,7 @@ export default function Board() {
     };
 
     function handleTileClick(position: Position3D) {
+        if (!gameState || !canDoAction) return;
         if (selectedPiece) {
             handlePlacement(position);
         } else {
@@ -128,62 +114,61 @@ export default function Board() {
     }
 
     const handleSelection = (position: Position3D) => {
-        const tile = getTile({ x: position[0], y: position[2] }, tiles);
+        const tile = getTile({ x: position[0], y: position[2] }, gameState!.tiles);
         if (tile) {
-            selectTileStack(tile, pieces);
+            selectTileStack(tile, gameState!.pieces);
         }
     };
 
     const handlePlacement = (position: Position3D) => {
         if (!possibleMoves.some((move) => move.x === position[0] && move.y === position[2])) return;
 
-        const tile = getTile({ x: position[0], y: position[2] }, tiles);
+        const tile = getTile({ x: position[0], y: position[2] }, gameState!.tiles);
         if (tile) {
             const tilePieces = tile.pieces
-                .map((id) => pieces.find((p) => p.id === id))
+                .map((id: string) => gameState!.pieces.find((p) => p.id === id))
                 .filter(Boolean) as Piece3D[];
 
             let newHeight = 0.25;
+            const updatedPieces = [];
             if (!selectedPiece!.selectable) {
                 // capstone -> standingstone
                 if (tilePieces.length > 0) {
                     const needsFlattening =
                         selectedPiece!.type == 'capstone' &&
                         tilePieces[tilePieces.length - 1].type == 'standingstone';
-                    if (needsFlattening) makeFlatstone(tilePieces[tilePieces.length - 1]);
+                    if (needsFlattening)
+                        updatedPieces.push(makeFlatstone(tilePieces[tilePieces.length - 1]));
                 }
                 stack.forEach((piece) => {
-                    movePiece(piece.id, { x: position[0], y: position[2] });
+                    const newPosition: Position3D = [position[0], piece.position[1], position[2]];
                     if (piece.id !== selectedPiece!.id) {
-                        changePiecePosition(piece.id, [
-                            position[0],
-                            piece.position[1],
-                            position[2],
-                        ]);
+                        const updatedPiece: Piece3D = { ...piece, position: newPosition };
+                        updatedPieces.push(updatedPiece);
                     }
                 });
 
                 newHeight += calculatePieceHeight(selectedPiece!.id, tilePieces);
                 // restrict stack movement direction
-                if (allowedDirections.length > 2) updateAllowedDirections(position);
-            } else {
-                placePiece(selectedPiece!.id, { x: position[0], y: position[2] });
-                changePieceSelectable(selectedPiece!.id, false);
+                updateAllowedDirections(position);
             }
-            const newPosition = [position[0], newHeight, position[2]];
-            changePiecePosition(selectedPiece!.id, newPosition as Vector3);
+            const newPosition: Position3D = [position[0], newHeight, position[2]];
+
+            const updatedPiece: Piece3D = { ...selectedPiece!, position: newPosition };
+
+            updatedPiece!.invisible = false;
+            updatedPieces.push(updatedPiece!);
+
+            handleMove(updatedPieces);
             const stackLength = shiftStack();
-            if (stackLength === 0) {
-                setIsRoundOver(true);
-            }
         }
     };
 
-    function makeFlatstone(piece: Piece3D) {
-        const updatedPiece: Piece3D = { ...piece, type: 'flatstone' };
-        const updatedPieces = pieces.map((p) => (p.id === piece.id ? updatedPiece : p));
-        changePieces(updatedPieces);
-    }
+    const handleMove = (updatedPieces: Piece3D[]) => {
+        if (room) {
+            makeMove(room, updatedPieces);
+        }
+    };
 
     const shiftStack = (): number => {
         const updatedStack = [...stack];
@@ -191,32 +176,81 @@ export default function Board() {
         setStack(updatedStack);
         return updatedStack.length;
     };
-    function checkRound() {
-        const playerColor = currentPlayer 
-        const enemyColor = currentPlayer === 'white' ? 'black' : 'white';
 
-        //check roads
-        const playerWin = checkRoadWin(tiles, playerColor, pieces);
-        if (!playerWin) {
-            const enemyWin = checkRoadWin(tiles, enemyColor, pieces);
-            if (enemyWin) {
-                setWinner(enemyColor);
-            }
-        } else {
-            setWinner(playerColor);
+    function makeStackInvisible() {
+        stack.forEach((piece) => {
+            piece.invisible = true;
+        });
+    }
+    function makeFlatstone(piece: Piece3D) {
+        const updatedPiece: Piece3D = { ...piece, type: 'flatstone' };
+        return updatedPiece;
+    }
+
+    function changePieceStand(piece: Piece3D): Piece3D {
+        if (piece.type == 'standingstone') {
+            return { ...piece, type: 'flatstone' };
+        } else if (piece.type == 'flatstone') {
+            return { ...piece, type: 'standingstone' };
         }
+    }
 
-        //check empty tiles
-        const boardFull = isBoardFull(tiles)
-        if (boardFull) {
-            const playerFlatstones = 
-            
+    const selectAbovePieces = (piece: Piece3D, pieces: Piece3D[]) => {
+        const tile = getTileFromPiece(piece.id, gameState!.tiles);
+        if (!tile) return;
+        console.log(tile);
+        //select stack if last piece is from player
+        const lastPieceId = tile.pieces[tile.pieces.length - 1];
+        const lastPiece = pieces.find((piece) => piece.id === lastPieceId);
+
+        const pieceIndex = tile.pieces.indexOf(piece.id);
+        // max stack size is boardsize
+        if (tile.pieces.length - pieceIndex > gameState!.boardSize) return;
+        const piecesToSelect = tile.pieces
+            .slice(pieceIndex)
+            .map((pieceId: string) => pieces.find((piece) => piece.id === pieceId))
+            .filter((piece: Piece3D | null): piece is Piece3D => !!piece);
+
+        if (piecesToSelect.length > 0) {
+            setStack(piecesToSelect);
+        }
+        console.log(piecesToSelect);
+    };
+
+    function selectPiece(piece: Piece3D) {
+        if (piece.color != playerColor) return
+        console.log('selecting');
+        // place rival piece 1st turn
+        if (gameState!.roundNumber == 1) {
+            // select only flatstones 1st turn
+            if (piece.type == 'capstone') return;
+            if (piece.type == 'standingstone') changePieceStand(piece);
+        } else {
+            if (
+                stack.includes(piece) &&
+                (piece.type === 'flatstone' || piece.type === 'standingstone')
+            ) {
+                changePieceStand(piece);
+            }
+        }
+        setStack([piece]);
+    }
+    function handlePieceClick(e: ThreeEvent<MouseEvent>, pieceId: string) {
+        e.stopPropagation();
+        if (!gameState || !canDoAction) return;
+        const piece = getPiece(pieceId, gameState!.pieces);
+        if (!piece) return;
+        if (piece.selectable) {
+            selectPiece(piece);
+        } else if (gameState!.roundNumber > 1) {
+            selectAbovePieces(piece, gameState!.pieces);
         }
     }
 
     useEffect(() => {
         if (stack.length > 0) {
             setSelectedPiece(stack[0]);
+            makeStackInvisible();
         } else {
             setSelectedPiece(null);
         }
@@ -226,26 +260,26 @@ export default function Board() {
         if (!selectedPiece) {
             setPossibleMoves([]);
         } else {
-            const moves = calculateMoves(selectedPiece?.id, tiles, pieces, allowedDirections);
+            const moves = calculateMoves(
+                selectedPiece?.id,
+                gameState!.tiles,
+                gameState!.pieces,
+                allowedDirections
+            );
             setPossibleMoves(moves);
         }
     }, [selectedPiece, allowedDirections]);
 
-    useEffect(() => {
-        if (isRoundOver) {
-            checkRound();
-            if (currentPlayer == 'black') setRoundNumber(roundNumber + 1);
-            switchPlayer();
-            setIsRoundOver(false);
-            setAllowedDirections(directions);
-        }
-    }, [isRoundOver]);
 
-    console.log(tiles);
+    const shownPieces = (gameState && gameState.history[showRound].pieces) ?? [];
+
+    console.log(gameState?.history);
+
     return (
         <>
             <BoardModel scale={0.244} position={[0, 0, 0]} />
             <BoardTable />
+            <Pieces onClick={handlePieceClick} pieces={shownPieces} />
 
             {/* Render board click tiles */}
             {Array.from(Array(5), (_, i) => (
@@ -264,6 +298,13 @@ export default function Board() {
                     ))}
                 </Fragment>
             ))}
+
+            <Candle position={[5.2, -0.24, 5.3]} scale={[1, 3, 1]} />
+            <Candle
+                position={[-1.3, -0.24, -1.2]}
+                scale={[1, 3, 1]}
+                rotation={[0, -Math.PI / 2, 0]}
+            />
         </>
     );
 }

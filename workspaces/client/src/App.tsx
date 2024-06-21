@@ -1,56 +1,50 @@
 import { Canvas } from '@react-three/fiber';
-import { useGlobalState } from './store/store';
 import Scene from './components/Scene';
 import { useEffect, useState } from 'react';
+import { useSettingsStore } from './store/SettingsStore';
+import { SocketManager } from './socket/SocketManager';
+import Messages from './components/Messages';
+import { useSocketStore } from './store/SocketStore';
+import ThemeButton from './components/ThemeButton';
+import GameUI from './components/GameUI';
+import JoinRoomCard from './components/JoinRoomCard';
+import { Toaster } from '../@/components/ui/toaster';
 
 function App() {
-    const { gameStarted, currentPlayer, setGameStarted, roundNumber, winner } = useGlobalState();
+    SocketManager();
 
-    function handleCanvasClick() {
-        if (!gameStarted) setGameStarted(true);
-    }
+    const { gameState} = useSocketStore();
 
-    const [message, setMessage] = useState('');
-    useEffect(() => {
-        if (roundNumber == 1) {
-            setMessage('Select opponent starting flatstone');
-        }else if(winner) setMessage(`${winner} player wins`)
-        
-        else {
-            setMessage('');
-        }
-    }, [roundNumber, winner]);
+
+    function handleCanvasClick() {}
 
     return (
-        <div className="flex h-screen w-screen font-segoe ">
-            {!gameStarted ? (
-                <section>
-                    <header className="mt-10 fixed  w-full items-center flex flex-col ">
+        <>
+            <main className="flex h-screen w-screen  bg-white text-black dark:bg-black dark:text-white ">
+                {!gameState? (
+                    <header className="mt-10 fixed  w-full items-center flex flex-col z-20">
                         <h1 className="text-8xl">TAK</h1>
                         <h2>A beautiful game</h2>
-                        <span className="text-base mt-20 animate-pulse">
-                            Click anywhere to start a new game
-                        </span>
+                        <JoinRoomCard />
                     </header>
-                </section>
-            ) : (
-                <>
-                    <div className="mt-10 fixed w-full justify-center flex flex-col  ">
-                        <div className=" w-full justify-center flex gap-10">
-                            <span className=""> Player Turn: {currentPlayer}</span>
-                            <span className=""> Round: {roundNumber}</span>
-                        </div>
-                        <div className="mt-10 w-full flex justify-center">{message}</div>
-                    </div>
-                </>
-            )}
-            <Canvas
-                onPointerMissed={() => handleCanvasClick()}
-                shadows
-                camera={{ position: [5, 5, 13], fov: 60 }}>
-                <Scene />
-            </Canvas>
-        </div>
+                ) : (
+                    <>
+                      <GameUI  />
+                    </>
+                )}
+                <div className="fixed top-2 right-2 z-20">
+                    <ThemeButton />
+                </div>
+                <Canvas
+                    className="z-10"
+                    onPointerMissed={() => handleCanvasClick()}
+                    shadows
+                    camera={{ position: [5, 5, 13], fov: 60 }}>
+                    <Scene />
+                </Canvas>
+            </main>
+            <Toaster />
+        </>
     );
 }
 

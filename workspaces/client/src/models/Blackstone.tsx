@@ -8,8 +8,7 @@ import { useGLTF } from '@react-three/drei';
 import { GLTF } from 'three-stdlib';
 import { GroupProps } from '@react-three/fiber';
 import { useStore } from 'zustand';
-import { useGlobalState } from '../store/store';
-
+import { useClientStore } from '../store/ClientStore';
 type GLTFResult = GLTF & {
     nodes: {
         Cylinder003: THREE.Mesh;
@@ -22,13 +21,13 @@ type GLTFResult = GLTF & {
 type Props = GroupProps & {
     isSelected: boolean;
     opacity: number;
-    isStanding:boolean
+    isStanding: boolean;
 };
 
 export function Blackstone({ isSelected, opacity, isStanding, ...props }: Props) {
     const { nodes, materials } = useGLTF('/blackstone.glb') as GLTFResult;
 
-    const { selectedColor } = useGlobalState();
+    const { selectedColor } = useClientStore();
 
     const material = useMemo(() => {
         const newMaterial = materials['Material.018'];
@@ -36,7 +35,7 @@ export function Blackstone({ isSelected, opacity, isStanding, ...props }: Props)
         newMaterial.transparent = true;
         return newMaterial;
     }, [materials, opacity]);
-    
+
     const rotation = isStanding ? [-Math.PI / 2, 0, 0] : [0, 0, 0];
     const position = isStanding ? [0.2, 0.3, 0.3] : [0.2, -0.9, 0.3];
 

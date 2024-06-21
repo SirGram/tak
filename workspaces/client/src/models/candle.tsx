@@ -35,6 +35,7 @@ export function Candle(props: JSX.IntrinsicElements['group']) {
                     material={materials.Candle}
                     morphTargetDictionary={nodes.Circle003_1.morphTargetDictionary}
                     morphTargetInfluences={nodes.Circle003_1.morphTargetInfluences}
+                    castShadow
                 />
                 <mesh
                     name="Circle003_2"
@@ -42,6 +43,7 @@ export function Candle(props: JSX.IntrinsicElements['group']) {
                     material={materials.Flame}
                     morphTargetDictionary={nodes.Circle003_2.morphTargetDictionary}
                     morphTargetInfluences={nodes.Circle003_2.morphTargetInfluences}
+                    
                 />
                 <mesh
                     geometry={nodes.Vert003.geometry}

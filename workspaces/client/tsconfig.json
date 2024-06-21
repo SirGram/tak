@@ -24,8 +24,12 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    "paths": {
+      "shared": ["../../shared"]
+    }
   },
-  "include": ["src"],
+  "include": ["src", "src/lib", "@/components/ui"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
