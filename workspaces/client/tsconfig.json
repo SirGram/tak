@@ -8,7 +8,7 @@
 
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
-        "outDir": "./dist",
+        "outDir": "../server/dist",
         "rootDir": "./src",
 
         /* Bundler mode */

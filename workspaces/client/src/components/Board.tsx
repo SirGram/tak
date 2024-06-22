@@ -76,7 +76,7 @@ export default function Board() {
     const selectTileStack = (tile: Tile, pieces: Piece3D[]) => {
         const piecesToSelect = tile.pieces
             .map((pieceId: string) => pieces.find((piece) => piece.id === pieceId))
-            .filter((piece: Piece3D | undefined ): piece is Piece3D => !!piece);
+            .filter((piece: Piece3D | undefined): piece is Piece3D => !!piece);
 
         if (piecesToSelect.length > 0) {
             //select stack where last piece is from player
@@ -153,7 +153,14 @@ export default function Board() {
             updatedPiece!.invisible = false;
             updatedPieces.push(updatedPiece!);
 
+            if (gameState) gameState.pieces = updatedPieces;
+
             handleMove(updatedPieces);
+
+            setTimeout(() => {
+                
+                shiftStack();
+            }, 300);
         }
     };
 
@@ -162,13 +169,12 @@ export default function Board() {
             makeMove(room, updatedPieces);
         }
     };
-
-/*     const shiftStack = (): number => {
+    const shiftStack = (): number => {
         const updatedStack = [...stack];
         updatedStack.shift();
         setStack(updatedStack);
         return updatedStack.length;
-    }; */
+    };
 
     function makeStackInvisible() {
         stack.forEach((piece) => {
@@ -183,11 +189,11 @@ export default function Board() {
     function changePieceStand(piece: Piece3D): Piece3D {
         let newPiece = piece;
         if (piece.type == 'standingstone') {
-            newPiece={ ...piece, type: 'flatstone' } as Piece3D;
+            newPiece = { ...piece, type: 'flatstone' } as Piece3D;
         } else if (piece.type == 'flatstone') {
-            newPiece= { ...piece, type: 'standingstone' }as Piece3D
+            newPiece = { ...piece, type: 'standingstone' } as Piece3D;
         }
-        return newPiece
+        return newPiece;
     }
 
     const selectAbovePieces = (piece: Piece3D, pieces: Piece3D[]) => {
@@ -211,22 +217,30 @@ export default function Board() {
     };
 
     function selectPiece(piece: Piece3D) {
-        if (piece.color != playerColor) return
-        console.log('selecting');
+        const isValidSelection =
+            (piece.color == playerColor && gameState!.roundNumber > 1) ||
+            (gameState!.roundNumber == 1 && piece.color !== playerColor);
+        if (!isValidSelection) return;
         // place rival piece 1st turn
         if (gameState!.roundNumber == 1) {
             // select only flatstones 1st turn
             if (piece.type == 'capstone') return;
-            if (piece.type == 'standingstone') changePieceStand(piece);
+            if (piece.type == 'standingstone') piece = changePieceStand(piece);
         } else {
             if (
                 stack.includes(piece) &&
                 (piece.type === 'flatstone' || piece.type === 'standingstone')
             ) {
-                changePieceStand(piece);
+                piece = changePieceStand(piece);
             }
         }
         setStack([piece]);
+
+        if (gameState) {
+            gameState.pieces = gameState.pieces.map((p) =>
+                p.id === piece.id ? piece : p
+            );
+        }
     }
     function handlePieceClick(e: ThreeEvent<MouseEvent>, pieceId: string) {
         e.stopPropagation();
@@ -263,9 +277,7 @@ export default function Board() {
         }
     }, [selectedPiece, allowedDirections]);
 
-
-    const shownPieces = (gameState && gameState.history[showRound].pieces) ?? [];
-
+    const shownPieces = gameState?.pieces ?? [];
     console.log(gameState?.history);
 
     return (

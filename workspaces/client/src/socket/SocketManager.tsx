@@ -1,25 +1,39 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useSocketStore } from '../store/SocketStore';
 import { useToast } from '../components/ui/use-toast';
 import { GameState, Piece3D, Player } from '../../../common/types';
 
-export const socket = io('https://tak-server.fly.dev/');
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+
+export const socket = io(SOCKET_URL, {
+    transports: ['websocket'], // use webSocket only
+});
 
 export const SocketManager = () => {
-    const { setGameState, addMessage, setRoom, setUsername, setPlayerColor } = useSocketStore();
+    const { setGameState, addMessage, setRoom, setUsername, setPlayerColor, playerColor } =
+        useSocketStore();
 
     const { toast } = useToast();
 
+    console.log(playerColor);
+
+    const playerColorRef = useRef(playerColor);
+
     useEffect(() => {
-        socket.on('roomJoined', (joinedRoomId: string, username: string, playerColor: Player) => {
+        playerColorRef.current = playerColor;
+    }, [playerColor]);
+
+    useEffect(() => {
+        socket.on('roomJoined', (joinedRoomId: string, username: string, color: Player, gameState: GameState) => {
             sendMessage(joinedRoomId, `${username} joined the room`);
             setRoom(joinedRoomId);
             setUsername(username);
-            setPlayerColor(playerColor);
+            setPlayerColor(color);
+            setGameState(gameState);
             toast({
                 title: `Successfully joined room ${joinedRoomId}`,
-                description: `${username} playing as ${playerColor} `,
+                description: `${username} playing as ${color} `,
                 variant: 'default',
             });
         });
@@ -33,8 +47,13 @@ export const SocketManager = () => {
         });
 
         socket.on('gameUpdated', (gameState: GameState) => {
-            console.log('game updated', gameState);
-            setGameState(gameState);
+            if (gameState.roundNumber === 1) {
+                setGameState(gameState);
+            } else if (gameState.currentPlayer === playerColorRef.current) {
+                setGameState(gameState);
+            }
+            // update opponent board
+            console.log('updating for opponent', playerColorRef.current);
         });
 
         socket.on('messagePosted', (message: { username: string; content: string }) => {
@@ -48,7 +67,7 @@ export const SocketManager = () => {
             socket.off('startGame');
             socket.off('messagePosted');
         };
-    }, [addMessage, setRoom]);
+    }, [addMessage, setRoom, playerColor, setPlayerColor]);
 };
 
 export function joinRoom(roomId: string, username: string) {

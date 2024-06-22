@@ -12,6 +12,10 @@ export default function JoinRoomCard() {
         e.preventDefault();
 
         // Validate room ID length
+        if (!username) {
+            alert('Username is required');
+            return;
+        }
         if (roomId.length < 1 || roomId.length > 3) {
             alert('Room Number must be between 1 and 3 characters.');
             return;

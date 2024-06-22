@@ -1,13 +1,13 @@
-# fly.toml app configuration file generated for tak-server on 2024-06-22T00:44:06+02:00
+# fly.toml app configuration file generated for tak on 2024-06-22T02:30:18+02:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'tak-server'
+app = 'tak'
 primary_region = 'mad'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [http_service]
   internal_port = 8080
@@ -17,24 +17,27 @@ primary_region = 'mad'
   min_machines_running = 0
   processes = ['app']
 
+[[services]]
+  http_checks = []
+  protocol = ''
+  internal_port = 0  
+
+  [[services.ports]]
+    port = 80
+    handlers = ['http']
+
+
+  [services.concurrency]
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.tcp_checks]]
+    interval = '10s'
+    timeout = '2s'
+
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
 
 
-[services.concurrency]
-  hard_limit = 25
-  soft_limit = 20
-
-[[services.ports]]
-  handlers = ["http"]
-  port = "80"
-
-[[services.ports]]
-  handlers = ["tls", "http"]
-  port = "443"
-
-[[services.tcp_checks]]
-  interval = 10000
-  timeout = 2000

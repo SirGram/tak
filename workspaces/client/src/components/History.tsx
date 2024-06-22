@@ -15,7 +15,7 @@ export default function History() {
     useEffect(() => {
         if (showRound === history.length - 2) {
             setShowRound(history.length - 1);
-        } else {
+        } else if (showRound > 0) {
             toast({
                 title: 'Opponent made a move',
                 description: 'Update history to show opponent move',

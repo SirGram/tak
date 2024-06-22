@@ -2,14 +2,28 @@ import { Server, Socket } from 'socket.io';
 import { GameState, Piece3D } from '../../common/types';
 import { initialGameState } from './state/state';
 import { updatePieces } from './logic/logic';
+import express from 'express';
 
-const io = new Server({
+import http from 'http';
+import path from 'path';
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:8080',
+    origin: 'http://localhost:8088/',
   },
 });
+app.use(express.static(path.join(__dirname, '../dist')));
 
-io.listen(3000);
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist'));
+});
+
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 interface Room {
   id: string;
@@ -59,12 +73,13 @@ const handleJoinRoom = (socket: any, roomId: string, username: string) => {
 
     // Determine player color based on number of players
     const playerColor = rooms[roomId].players.length === 1 ? 'white' : 'black';
-    socket.emit('roomJoined', roomId, username, playerColor);
+    socket.emit('roomJoined', roomId, username, playerColor, rooms[roomId].gameState);
     console.log(`User ${username} joined room ${roomId} as ${playerColor}`);
 
     if (rooms[roomId].players.length === 2) {
       rooms[roomId].gameState.gameStarted = true;
     }
+    console.log(rooms[roomId].players);
     sendGameUpdate(roomId, rooms[roomId].gameState);
   } else {
     socket.emit('roomFull', roomId);
@@ -124,8 +139,12 @@ const handleMakeMove = (roomId: string, pieces: Piece3D[]) => {
 };
 
 const roundOver = (gameState: GameState, newPieces: Piece3D[]) => {
-  const nextPlayer:'white' | 'black' = gameState.currentPlayer === 'white' ? 'black' : 'white';
-  const nextRoundNumber = gameState.currentPlayer === 'black' ? gameState.roundNumber + 1 : gameState.roundNumber;
+  const nextPlayer: 'white' | 'black' =
+    gameState.currentPlayer === 'white' ? 'black' : 'white';
+  const nextRoundNumber =
+    gameState.currentPlayer === 'black'
+      ? gameState.roundNumber + 1
+      : gameState.roundNumber;
   const updatedGameState = {
     ...gameState,
     pieces: newPieces,
@@ -134,7 +153,7 @@ const roundOver = (gameState: GameState, newPieces: Piece3D[]) => {
       {
         tiles: gameState.tiles,
         pieces: newPieces,
-      }
+      },
     ],
     roundNumber: nextRoundNumber,
     currentPlayer: nextPlayer,
