@@ -1,26 +1,20 @@
 import { Fragment } from 'react/jsx-runtime';
 import { BoardModel } from '../models/BoardModel';
 import { Color, ThreeEvent } from '@react-three/fiber';
-import { useCallback, useEffect, useState } from 'react';
-import { useGameStore } from '../store/GameStore';
 import { useClientStore } from '../store/ClientStore';
-import { Piece3D, Position, Tile, Vector3 } from '../logic';
 import {
     calculateMoves,
     calculatePieceHeight,
-    getFlatstones,
     getPiece,
     getTile,
     getTileFromPiece,
-    isBoardFull,
-    isTileEmpty,
 } from '../logic/board';
 import { Candle } from '../models/Candle';
-import { update } from '@react-spring/three';
 import Pieces from './Pieces';
 import { makeMove } from '../socket/SocketManager';
 import { useSocketStore } from '../store/SocketStore';
-import { Position3D } from '../../../shared/types';
+import { Piece3D, Position, Position3D, Tile } from '../../../common/types';
+import { useEffect, useState } from 'react';
 
 type TileProps = {
     position: [x: number, y: number, z: number];
@@ -82,7 +76,7 @@ export default function Board() {
     const selectTileStack = (tile: Tile, pieces: Piece3D[]) => {
         const piecesToSelect = tile.pieces
             .map((pieceId: string) => pieces.find((piece) => piece.id === pieceId))
-            .filter((piece: Piece3D | null): piece is Piece3D => !!piece);
+            .filter((piece: Piece3D | undefined ): piece is Piece3D => !!piece);
 
         if (piecesToSelect.length > 0) {
             //select stack where last piece is from player
@@ -160,7 +154,6 @@ export default function Board() {
             updatedPieces.push(updatedPiece!);
 
             handleMove(updatedPieces);
-            const stackLength = shiftStack();
         }
     };
 
@@ -170,12 +163,12 @@ export default function Board() {
         }
     };
 
-    const shiftStack = (): number => {
+/*     const shiftStack = (): number => {
         const updatedStack = [...stack];
         updatedStack.shift();
         setStack(updatedStack);
         return updatedStack.length;
-    };
+    }; */
 
     function makeStackInvisible() {
         stack.forEach((piece) => {
@@ -188,11 +181,13 @@ export default function Board() {
     }
 
     function changePieceStand(piece: Piece3D): Piece3D {
+        let newPiece = piece;
         if (piece.type == 'standingstone') {
-            return { ...piece, type: 'flatstone' };
+            newPiece={ ...piece, type: 'flatstone' } as Piece3D;
         } else if (piece.type == 'flatstone') {
-            return { ...piece, type: 'standingstone' };
+            newPiece= { ...piece, type: 'standingstone' }as Piece3D
         }
+        return newPiece
     }
 
     const selectAbovePieces = (piece: Piece3D, pieces: Piece3D[]) => {
@@ -200,8 +195,6 @@ export default function Board() {
         if (!tile) return;
         console.log(tile);
         //select stack if last piece is from player
-        const lastPieceId = tile.pieces[tile.pieces.length - 1];
-        const lastPiece = pieces.find((piece) => piece.id === lastPieceId);
 
         const pieceIndex = tile.pieces.indexOf(piece.id);
         // max stack size is boardsize
@@ -209,7 +202,7 @@ export default function Board() {
         const piecesToSelect = tile.pieces
             .slice(pieceIndex)
             .map((pieceId: string) => pieces.find((piece) => piece.id === pieceId))
-            .filter((piece: Piece3D | null): piece is Piece3D => !!piece);
+            .filter((piece: Piece3D | undefined): piece is Piece3D => !!piece);
 
         if (piecesToSelect.length > 0) {
             setStack(piecesToSelect);

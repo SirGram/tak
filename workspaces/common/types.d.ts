@@ -1,5 +1,5 @@
 export type Position = { x: number; y: number };
-
+export type Player =  "white" | "black" 
 export type Tile = {
   pieces: string[];
   position: Position;
@@ -15,7 +15,7 @@ export type PieceColor = "white" | "black";
 export interface Piece3D {
   id: string;
   model: PieceModel;
-  position: Vector3;
+  position: Position3D;
   type: PieceType;
   selectable: boolean;
   invisible: boolean;
@@ -30,7 +30,7 @@ export type BoardSize = 3 | 4 | 5 | 6;
 export type GameBoard = {
   gameStarted: boolean;
   gameOver: boolean;
-  winner: null | "black" | "white";
+  winner: null | "black" | "white" | "tie";
   currentPlayer: "white" | "black";
   roundNumber: number;
   flatstones: { white: number; black: number };

@@ -4,7 +4,7 @@ import {
   Position,
   TBoard,
   Tile,
-} from '../../../shared/types';
+} from '../../../common/types';
 
 const pieceHeights: Record<string, number> = {
   flatstone: 0.22,

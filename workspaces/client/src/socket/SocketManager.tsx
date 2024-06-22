@@ -1,13 +1,10 @@
 import { useEffect } from 'react';
 import { io } from 'socket.io-client';
-import { Player, useGameStore } from '../store/GameStore';
 import { useSocketStore } from '../store/SocketStore';
-import { useToast } from '../../@/components/ui/use-toast';
-import { Piece3D } from '../logic';
-import { useBoardStore } from '../store/ClientStore';
-import { GameState } from '../../../../shared/types';
+import { useToast } from '../components/ui/use-toast';
+import { GameState, Piece3D, Player } from '../../../common/types';
 
-export const socket = io('http://localhost:3001');
+export const socket = io('https://tak-server.fly.dev/');
 
 export const SocketManager = () => {
     const { setGameState, addMessage, setRoom, setUsername, setPlayerColor } = useSocketStore();

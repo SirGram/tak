@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Button } from '../../@/components/ui/button';
-import { Input } from '../../@/components/ui/input';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { joinRoom } from '../socket/SocketManager';
-import { Card } from '../../@/components/ui/card';
+import { Card } from './ui/card';
 
 export default function JoinRoomCard() {
     const [roomId, setRoomId] = useState('');
@@ -24,7 +24,9 @@ export default function JoinRoomCard() {
         <Card className="flex flex-col items-center gap-2  mt-20 p-4">
             <span className="text-base animate-pulse mb-2">Create or join a room</span>
 
-            <form className="flex items-center h-fit flex-col gap-1" onSubmit={(e) => handleSubmit(e)}>
+            <form
+                className="flex items-center h-fit flex-col gap-1"
+                onSubmit={(e) => handleSubmit(e)}>
                 <Input
                     type="text"
                     placeholder="Username"

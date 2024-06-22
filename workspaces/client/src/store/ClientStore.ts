@@ -1,5 +1,5 @@
 import create from 'zustand';
-import { Piece3D, Position, Tile } from '../../../shared/types';
+import { Piece3D, Position, Tile } from '../../../common/types';
 
 export type TBoard = Tile[];
 export type BoardSize = 3 | 4 | 5 | 6;

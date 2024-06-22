@@ -1,6 +1,5 @@
-import { BoardSize, useBoardStore } from '../store/ClientStore';
-import { Piece3D, PieceColor, Position, Tile } from '.';
-import { DFS } from '../utils/utils';
+import { Piece3D, PieceColor, Position, TBoard, Tile } from "../../../common/types";
+
 
 export function getTile(position: Position, tiles: TBoard): Tile | null {
     const tile =

@@ -1,15 +1,15 @@
 import { Server, Socket } from 'socket.io';
-import { GameState, Piece3D } from '../../shared/types';
+import { GameState, Piece3D } from '../../common/types';
 import { initialGameState } from './state/state';
 import { updatePieces } from './logic/logic';
 
 const io = new Server({
   cors: {
-    origin: 'http://localhost:5173',
+    origin: 'http://localhost:8080',
   },
 });
 
-io.listen(3001);
+io.listen(3000);
 
 interface Room {
   id: string;

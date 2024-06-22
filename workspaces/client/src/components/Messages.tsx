@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Button } from '../../@/components/ui/button';
+import { Button } from './ui/button';
 import { useSocketStore } from '../store/SocketStore';
-import { Input } from '../../@/components/ui/input';
+import { Input } from './ui/input';
 import { sendMessage } from '../socket/SocketManager';
 
 export default function Messages() {
     const { messages, room, username } = useSocketStore();
 
-
     const [newMessage, setNewMessage] = useState('');
     const [lastMessageOpacity, setLastMessageOpacity] = useState(1);
 
-    const numberOfMessages = 8
+    const numberOfMessages = 8;
 
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();

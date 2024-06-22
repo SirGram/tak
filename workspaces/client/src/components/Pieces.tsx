@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react';
 import { useSpring, animated } from '@react-spring/three';
 import { ThreeEvent } from '@react-three/fiber';
 import { useClientStore } from '../store/ClientStore';
@@ -6,9 +5,7 @@ import { Blackstone } from '../models/Blackstone';
 import { Blackcapstone } from '../models/Blackcapstone';
 import { Whitestone } from '../models/Whitestone';
 import { Whitecapstone } from '../models/Whitecapstone';
-import { Vector3 } from '@react-three/fiber';
-import { useSocketStore } from '../store/SocketStore';
-import { Piece3D } from '../../../shared/types';
+import { Piece3D} from '../../../common/types';
 
 export type Piece3DExtended = Piece3D & {
     isHovered: boolean;
@@ -43,7 +40,7 @@ function Piece({
         return stackPiece.id == piece.id;
     });
 
-    const springProps = useSpring({
+    const springProps: any = useSpring({
         position: isPieceSelected
             ? [piece.position[0], piece.position[1] + 2, piece.position[2]]
             : piece.position,

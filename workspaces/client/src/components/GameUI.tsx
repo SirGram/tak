@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Card } from '../../@/components/ui/card';
+import { Card } from './ui/card';
 import { useSocketStore } from '../store/SocketStore';
 import Messages from './Messages';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@radix-ui/react-collapsible';
-import { Button } from '../../@/components/ui/button';
-import { ChevronsLeft, ChevronsLeftRight, ChevronsRight, ChevronsUpDown } from 'lucide-react';
-import History, { Separator } from './History';
+import { Button } from './ui/button';
+import { ChevronsLeft,  ChevronsRight } from 'lucide-react';
+import History from './History';
 import useSeconds from '../hooks';
 import { useClientStore } from '../store/ClientStore';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 function GameInfo() {
-    const { gameState, room, playerColor,opponentUsername } = useSocketStore();
+    const { gameState, room, playerColor } = useSocketStore();
 
-    const {showRound} = useClientStore()
+    const { showRound } = useClientStore();
 
     const { gameStarted, currentPlayer, roundNumber, winner, flatstones } = gameState!;
 
@@ -28,9 +28,10 @@ function GameInfo() {
     }, [gameStarted]);
 
     useEffect(() => {
-        if (!gameState?.gameStarted) return setMessage('Share your room with a friend to play with!');
+        if (!gameState?.gameStarted)
+            return setMessage('Share your room with a friend to play with!');
 
-        if(currentPlayer != playerColor) return setMessage('Waiting for your opponent move');
+        if (currentPlayer != playerColor) return setMessage('Waiting for your opponent move');
 
         if (roundNumber == 1) {
             setMessage('Select opponent starting flatstone');

@@ -1,4 +1,4 @@
-import { GameState, Piece3D, TBoard } from '../../../shared/types';
+import { GameState, Piece3D, TBoard } from '../../../common/types';
 import { initialPieces, initializeBoard } from '../logic/logic';
 
 const boardSize = 5; 

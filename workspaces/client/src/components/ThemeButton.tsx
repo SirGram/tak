@@ -1,5 +1,5 @@
 import { useSettingsStore } from '../store/SettingsStore';
-import { Button } from '../../@/components/ui/button';
+import { Button } from './ui/button';
 
 import { Sun, Moon } from 'lucide-react';
 import { useEffect } from 'react';
@@ -7,7 +7,6 @@ import { useEffect } from 'react';
 export default function ThemeButton() {
     const { lightTheme, updateTheme } = useSettingsStore();
 
-    
     useEffect(() => {
         if (lightTheme) {
             document.documentElement.classList.remove('dark');

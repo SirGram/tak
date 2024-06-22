@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { start } from 'repl';
-import { useGameStore } from '../store/GameStore';
 
 const useSeconds = () => {
 

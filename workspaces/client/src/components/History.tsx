@@ -1,10 +1,10 @@
 import { ArrowLeft, ArrowLeftFromLine, ArrowRight, ArrowRightFromLine } from 'lucide-react';
-import { Button } from '../../@/components/ui/button';
-import { Card } from '../../@/components/ui/card';
+import { Button } from './ui/button';
+import { Card } from './ui/card';
 import { useEffect } from 'react';
 import { useSocketStore } from '../store/SocketStore';
 import { useClientStore } from '../store/ClientStore';
-import { useToast } from '../../@/components/ui/use-toast';
+import { useToast } from './ui/use-toast';
 
 export default function History() {
     const { gameState } = useSocketStore();
@@ -38,7 +38,7 @@ export default function History() {
     };
 
     const nextBoard = () => {
-        if (showRound < gameState.history.length - 1) {
+        if (showRound < history.length - 1) {
             setShowRound(showRound + 1);
         }
     };

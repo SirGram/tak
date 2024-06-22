@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { GameState } from '../../../shared/types';
+import { GameState } from '../../../common/types';
 
 
 type Player = 'white' | 'black';    

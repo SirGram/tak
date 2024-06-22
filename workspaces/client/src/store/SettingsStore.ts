@@ -1,4 +1,4 @@
-import { get } from "http";
+
 import { create } from "zustand";
 
 interface Settings {

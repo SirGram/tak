@@ -1,10 +1,5 @@
-import { CameraControls, Environment, OrbitControls, SpotLight } from '@react-three/drei';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Environment, OrbitControls} from '@react-three/drei';
 import Board from './Board';
-import Pieces from './Pieces';
-import { useEffect, useRef, useState } from 'react';
-import { useControls } from 'leva';
-import { Candle } from '../models/Candle';
 import { useSettingsStore } from '../store/SettingsStore';
 import { useSocketStore } from '../store/SocketStore';
 
