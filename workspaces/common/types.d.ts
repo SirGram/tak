@@ -1,10 +1,10 @@
 export type Position = { x: number; y: number };
+export type Position3D = [x: number, y: number, z: number];
 export type Player =  "white" | "black" 
 export type Tile = {
   pieces: string[];
   position: Position;
 };
-export type Position3D = [x: number, y: number, z: number];
 export type PieceType = "standingstone" | "flatstone" | "capstone";
 export type PieceModel =
   | "Whitestone"
@@ -12,14 +12,9 @@ export type PieceModel =
   | "Whitecapstone"
   | "Blackcapstone";
 export type PieceColor = "white" | "black";
-export interface Piece3D {
+export type Piece = {
   id: string;
-  model: PieceModel;
-  position: Position3D;
   type: PieceType;
-  selectable: boolean;
-  invisible: boolean;
-  height: number;
   color: PieceColor;
 }
 
@@ -27,25 +22,22 @@ export type Vector3 = [number, number, number];
 export type TBoard = Tile[];
 export type BoardSize = 3 | 4 | 5 | 6;
 
-export type GameBoard = {
+export type Move = {
+  stack: Piece[];
+  from: Position | null;
+  to: Position;
+}
+
+export type ServerGameState = {
   gameStarted: boolean;
   gameOver: boolean;
-  winner: null | "black" | "white" | "tie";
-  currentPlayer: "white" | "black";
+  winner: string | null;
+  currentPlayer: string;
+  boardSize: number;
   roundNumber: number;
-  flatstones: { white: number; black: number };
-  history: { tiles: TBoard; pieces: Piece3D[] }[];
-  tiles: TBoard;
-  pieces: Piece3D[];
-};
-
-export type GameSettings = {
-  boardSize: 3 | 4 | 5 | 6;
-  selectedColor: "red" | "blue";
-};
-
-export type GameExtra = {
   gameTime: number;
-};
-
-export type GameState = GameBoard & GameSettings & GameExtra;
+  history: Array<{ tiles: TBoard, pieces: Piece[] }>;
+  tiles: TBoard;
+  pieces: Piece[];
+  selectedStack: Piece[];
+}

@@ -15,6 +15,7 @@ module.exports = {
     plugins: ['react-refresh'],
     rules: {
         'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+          "@typescript-eslint/no-redundant-type-constituents": "off"
     },
     parserOptions: {
         ecmaVersion: 'latest',

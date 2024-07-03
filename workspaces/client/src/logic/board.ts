@@ -1,5 +1,4 @@
-import { Piece3D, PieceColor, Position, TBoard, Tile } from "../../../common/types";
-
+import { Piece, Piece3D, PieceColor, Position, TBoard, Tile } from '../../../common/types';
 
 export function getTile(position: Position, tiles: TBoard): Tile | null {
     const tile =
@@ -14,14 +13,10 @@ export function getTileFromPiece(pieceId: string, tiles: TBoard): Tile | null {
     return tiles.find((tile) => tile.pieces.includes(pieceId)) ?? null;
 }
 
-export function getPiece(pieceId: string, pieces: Piece3D[]): Piece3D | null {
-    return (
-        pieces.find((p) => {
-            return p.id === pieceId;
-        }) ?? null
-    );
+export function getPiece(pieceId: string, pieces: Piece[]): Piece | null {
+    const piece = pieces.find((p) => p.id === pieceId);
+    return piece ?? null;
 }
-
 export function isTileEmpty(position: Position, tiles: TBoard): boolean {
     const tile = getTile(position, tiles);
     return tile?.pieces.length === 0;
@@ -46,7 +41,7 @@ export function isBoardFull(tiles: TBoard): boolean {
 export function calculateMoves(
     pieceId: string,
     tiles: TBoard,
-    pieces: Piece3D[],
+    pieces: Piece[],
     directions: Position[]
 ): Position[] {
     // piece not on  board
@@ -64,10 +59,8 @@ export function calculateMoves(
             const targetTile = getTile({ x: newX, y: newY }, tiles);
             if (!targetTile) return;
             const originPiece = getPiece(pieceId, pieces);
-            // active stack is invisible
             const targetablePieces = targetTile.pieces
                 .map((pieceId) => getPiece(pieceId, pieces))
-                .filter((piece): piece is Piece3D => !!piece && !piece.invisible);
             console.log(targetablePieces);
 
             const lastPiece = targetablePieces[targetablePieces.length - 1];
@@ -85,16 +78,14 @@ export function calculateMoves(
     return possibleMoves;
 }
 
-export function getFlatstones(tiles: Tile[], color: PieceColor, pieces: Piece3D[]) {
+export function getFlatstones(tiles: Tile[], color: PieceColor, pieces: Piece[]): number {
     let number = 0;
-    tiles.forEach((tile) => {
-        const lastTilePiece = getPiece(tile.pieces[tile.pieces.length - 1], pieces);
+    tiles.forEach((tile: Tile) => {
+        const lastTilePiece = getPiece(tile.pieces[tile.pieces.length - 1], pieces) ;
         if (lastTilePiece?.color == color && lastTilePiece.type == 'flatstone') number += 1;
     });
     return number;
 }
-
-
 
 export function calculatePieceHeight(pieceId: string, tilePieces: Piece3D[]): number {
     let extraHeight = 0;
@@ -104,5 +95,3 @@ export function calculatePieceHeight(pieceId: string, tilePieces: Piece3D[]): nu
     }
     return extraHeight;
 }
-
-

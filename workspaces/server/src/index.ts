@@ -1,11 +1,11 @@
 import { Server, Socket } from 'socket.io';
-import { GameState, Piece3D } from '../../common/types';
+import { Move, Piece, ServerGameState, TBoard, Tile } from '../../common/types';
 import { initialGameState } from './state/state';
-import { updatePieces } from './logic/logic';
 import express from 'express';
 
 import http from 'http';
 import path from 'path';
+import { getTile } from './logic/logic';
 
 const app = express();
 const server = http.createServer(app);
@@ -28,7 +28,8 @@ server.listen(PORT, () => {
 interface Room {
   id: string;
   players: { id: string; username: string; color: 'white' | 'black' }[];
-  gameState: GameState;
+  gameState: ServerGameState;
+  messages: { username: string; content: string }[];
 }
 const rooms: Record<string, Room> = {};
 
@@ -49,6 +50,10 @@ io.on('connection', (socket) => {
   socket.on('chatMessage', (roomId, username, messageContent) => {
     handleChatMessage(socket, roomId, username, messageContent);
   });
+
+  socket.on('selectStack', (roomId, pieces) => {
+    handleSelectStack(roomId, pieces);
+  });
   socket.on('makeMove', (room, move) => {
     handleMakeMove(room, move);
   });
@@ -61,6 +66,7 @@ const handleJoinRoom = (socket: any, roomId: string, username: string) => {
       id: roomId,
       players: [],
       gameState: initialGameState,
+      messages: [],
     };
 
     console.log(`Created room ${roomId}`);
@@ -73,7 +79,13 @@ const handleJoinRoom = (socket: any, roomId: string, username: string) => {
 
     // Determine player color based on number of players
     const playerColor = rooms[roomId].players.length === 1 ? 'white' : 'black';
-    socket.emit('roomJoined', roomId, username, playerColor, rooms[roomId].gameState);
+    socket.emit(
+      'roomJoined',
+      roomId,
+      username,
+      playerColor,
+      rooms[roomId].gameState,
+    );
     console.log(`User ${username} joined room ${roomId} as ${playerColor}`);
 
     if (rooms[roomId].players.length === 2) {
@@ -123,44 +135,84 @@ const handleChatMessage = (
   const room = rooms[roomId];
   if (room) {
     const chatMessage = { username, content };
-    io.to(roomId).emit('messagePosted', chatMessage);
+    room.messages.push(chatMessage);
+    io.to(roomId).emit('messagePosted', room.messages);
   }
 };
 
-const handleMakeMove = (roomId: string, pieces: Piece3D[]) => {
+const handleSelectStack = (roomId: string, pieces: Piece[]) => {
   const room = rooms[roomId];
+  room.gameState.selectedStack = pieces;
 
-  if (room) {
-    const newPieces = updatePieces(pieces, room.gameState.pieces);
-    room.gameState = roundOver(room.gameState, newPieces);
-    sendGameUpdate(roomId, room.gameState);
+  io.to(roomId).emit('gameUpdated', room.gameState);
+};
+
+const handleMakeMove = (roomId: string, move: Move) => {
+  const room = rooms[roomId];
+  if (!room) return;
+
+  const gameState = room.gameState;
+  let updatedTiles = [...gameState.tiles];
+
+  if (move.from === null) {
+    // Place a new piece on the board
+    updatedTiles = updatedTiles.map((tile) => {
+      if (tile.position.x === move.to.x && tile.position.y === move.to.y) {
+        return { ...tile, pieces: [...tile.pieces, move.stack[0].id] };
+      }
+      return tile;
+    });
+  } else {
+    // Move piece(s) on the board
+    const fromTile = getTile(move.from, updatedTiles);
+    const toTile = getTile(move.to, updatedTiles);
+
+    if (!fromTile || !toTile) return;
+
+    // Remove stack pieces from the source tile
+    fromTile.pieces = fromTile.pieces.filter(
+      (pieceId) => !move.stack.some((stackPiece) => stackPiece.id === pieceId),
+    );
+
+    // Add stack pieces to the destination tile
+    move.stack.forEach((stackPiece) => {
+      if (!toTile.pieces.includes(stackPiece.id)) {
+        toTile.pieces.push(stackPiece.id);
+      }
+    });
+
+    // Update the tiles in the updatedTiles array
+    updatedTiles = updatedTiles.map((tile) => {
+      if (
+        tile.position.x === fromTile.position.x &&
+        tile.position.y === fromTile.position.y
+      ) {
+        return fromTile;
+      }
+      if (
+        tile.position.x === toTile.position.x &&
+        tile.position.y === toTile.position.y
+      ) {
+        return toTile;
+      }
+      return tile;
+    });
   }
-  console.log(pieces);
+  room.gameState.tiles = updatedTiles;
+  sendGameUpdate(roomId, room.gameState);
+  console.log(gameState);
 };
-
-const roundOver = (gameState: GameState, newPieces: Piece3D[]) => {
+const roundOver = (gameState: ServerGameState) => {
+  const updatedGameState = gameState;
   const nextPlayer: 'white' | 'black' =
-    gameState.currentPlayer === 'white' ? 'black' : 'white';
+    updatedGameState.currentPlayer === 'white' ? 'black' : 'white';
   const nextRoundNumber =
-    gameState.currentPlayer === 'black'
-      ? gameState.roundNumber + 1
-      : gameState.roundNumber;
-  const updatedGameState = {
-    ...gameState,
-    pieces: newPieces,
-    history: [
-      ...gameState.history,
-      {
-        tiles: gameState.tiles,
-        pieces: newPieces,
-      },
-    ],
-    roundNumber: nextRoundNumber,
-    currentPlayer: nextPlayer,
-  };
+    updatedGameState.currentPlayer === 'black'
+      ? updatedGameState.roundNumber + 1
+      : updatedGameState.roundNumber;
 
-  return updatedGameState;
+  return gameState;
 };
-const sendGameUpdate = (roomId: string, gameState: GameState) => {
+const sendGameUpdate = (roomId: string, gameState: ServerGameState) => {
   io.to(roomId).emit('gameUpdated', gameState);
 };

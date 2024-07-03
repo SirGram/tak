@@ -1,14 +1,14 @@
 import create from 'zustand';
-import { Piece3D, Position, Tile } from '../../../common/types';
+import { Piece, Position, Tile } from '../../../common/types';
 
 export type TBoard = Tile[];
 export type BoardSize = 3 | 4 | 5 | 6;
 
 interface BoardSelections {
-    stack: Piece3D[];
-    setStack: (value: Piece3D[]) => void;
-    selectedPiece: Piece3D | null;
-    setSelectedPiece: (value: Piece3D | null) => void;
+    stack: Piece[];
+    setStack: (value: Piece[]) => void;
+    selectedPiece: Piece | null;
+    setSelectedPiece: (value: Piece | null) => void;
     possibleMoves: Position[];
     setPossibleMoves: (moves: Position[]) => void;
     showRound: number;

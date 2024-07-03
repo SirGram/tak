@@ -8,12 +8,16 @@ import History from './History';
 import useSeconds from '../hooks';
 import { useClientStore } from '../store/ClientStore';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { getFlatstones } from '../logic/board';
 function GameInfo() {
     const { gameState, room, playerColor } = useSocketStore();
 
     const { showRound } = useClientStore();
 
-    const { gameStarted, currentPlayer, roundNumber, winner, flatstones } = gameState!;
+    const { gameStarted, currentPlayer, roundNumber, winner, } = gameState!;
+    
+    const whiteFlatstones = getFlatstones(gameState!.tiles, 'white', gameState!.pieces);
+    const blackFlatstones = getFlatstones(gameState!.tiles, 'black', gameState!.pieces);
 
     const { startStopWatch, stopStopwatch, seconds } = useSeconds();
 
@@ -63,6 +67,9 @@ function GameInfo() {
             return `${formattedMinutes}:${formattedSeconds}`;
         }
     }
+    const handleExitRoom = () => { 
+        
+    }
 
     return (
         <>
@@ -93,7 +100,7 @@ function GameInfo() {
                                         </b>
                                     </span>
                                 </div>
-                                <CollapsibleContent className=" flex items-center justify-center gap-2 mx-2">
+                                <CollapsibleContent className=" flex flex-wrap items-center justify-center gap-2 mx-2">
                                     <span className="pl-2 pr-2 border-r border-l border-border flex items-center gap-1">
                                         <span> Round:</span> <b>{showRound}</b>
                                     </span>
@@ -105,6 +112,8 @@ function GameInfo() {
                                         <span>Time:</span>
                                         <b>{formatGameTime(seconds)}</b>
                                     </span>
+                                    <Button onClick={handleExitRoom}
+                                        variant={'default'} className='m-2'>Exit Room</Button>
                                 </CollapsibleContent>
                                 <CollapsibleTrigger asChild className=" h-full">
                                     <Button variant="ghost" size="sm" className="w-9 p-0 m-0">
@@ -124,14 +133,14 @@ function GameInfo() {
                             className="w-fit flex gap-2 h-10 px-2 items-center "
                             title="Number of flatstones">
                             <span className="pr-2 h-full items-center flex gap-1 font-semibold">
-                                {flatstones.black}
+                                {blackFlatstones}
                                 <div className="size-6 bg-orange-950 border-foreground border-2  rounded-full"></div>
                             </span>
 
                             <div className="py-1 w-[1px] h-6 bg-muted "></div>
                             <span className=" h-full items-center flex  gap-1 font-semibold">
                                 <div className="size-6 bg-brown border-muted border-2 bg-yellow-100 "></div>
-                                {flatstones.white}
+                                {whiteFlatstones}
                             </span>
                         </Card>
                     </div>

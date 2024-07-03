@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { GameState } from '../../../common/types';
-
+import type  {ServerGameState}  from '../../../common/types';
 
 type Player = 'white' | 'black';    
 
@@ -21,8 +20,8 @@ interface SocketState {
     playerColor: Player | null;
     setPlayerColor: (value: Player | null) => void;
     
-    gameState: GameState | null;
-    setGameState: (value: GameState | null) => void;
+    gameState: ServerGameState | null;
+    setGameState: (value: ServerGameState | null) => void;
 }
 
 export const useSocketStore = create<SocketState>((set) => ({

@@ -1,63 +1,13 @@
+import { create } from 'zustand';
 import {
   BoardSize,
-  Piece3D,
+  Piece,
+  PieceColor,
+  PieceType,
   Position,
   TBoard,
   Tile,
 } from '../../../common/types';
-
-const pieceHeights: Record<string, number> = {
-  flatstone: 0.22,
-  capstone: 0.65,
-};
-
-export const initialPieces: Piece3D[] = [
-  // Player 1 black stones (stacked vertically)
-  ...(Array.from({ length: 21 }, (_, i) => ({
-    id: (i + 1).toString(),
-    model: 'Blackstone',
-    position: [-2, 0, i * pieceHeights.flatstone + 0.5],
-    type: 'standingstone',
-    selectable: true,
-    height: pieceHeights.flatstone,
-    color: 'black',
-    invisible: false,
-  })) as Piece3D[]),
-
-  // Player 2 white stones (stacked vertically)
-  ...(Array.from({ length: 21 }, (_, i) => ({
-    id: (i + 22).toString(),
-    model: 'Whitestone',
-    position: [6, 0, i * pieceHeights.flatstone - 1],
-    type: 'standingstone',
-    selectable: true,
-    height: pieceHeights.flatstone,
-    color: 'white',
-    invisible: false,
-  })) as Piece3D[]),
-
-  // capstones
-  {
-    id: '43',
-    model: 'Blackcapstone',
-    position: [-2, 0, -0.5], // Place capstone on top of the black stones
-    type: 'capstone',
-    selectable: true,
-    height: pieceHeights.capstone,
-    color: 'black',
-    invisible: false,
-  },
-  {
-    id: '44',
-    model: 'Whitecapstone',
-    position: [6, 0, 4], // Place capstone on top of the black stones
-    type: 'capstone',
-    selectable: true,
-    height: pieceHeights.capstone,
-    color: 'white',
-    invisible: false,
-  },
-];
 
 const createTile = (position: Position): Tile => {
   return {
@@ -65,6 +15,18 @@ const createTile = (position: Position): Tile => {
     position,
   };
 };
+
+export function createPiece(
+  id: string,
+  type: PieceType,
+  color: PieceColor,
+): Piece {
+  return {
+    id,
+    type,
+    color,
+  };
+}
 
 export function initializeBoard(size: BoardSize): TBoard {
   const initialBoard: TBoard = [];
@@ -77,14 +39,72 @@ export function initializeBoard(size: BoardSize): TBoard {
   return initialBoard;
 }
 
-export function updatePieces(
-  updatedPieces: Piece3D[],
-  pieces: Piece3D[],
-): Piece3D[] {
-  return pieces.map(
-    (piece) =>
-      updatedPieces.find((updated) => updated.id == piece.id) ?? piece,
+export function initializePieces(size: BoardSize): Piece[] {
+  const initialPieces: Piece[] = [];
+  let numberOfWhitestones = 0;
+  let numberOfBlackstones = 0;
+  let numberOfWhiteCapstones = 0;
+  let numberOfBlackCapstones = 0;
+
+  if (size === 5) {
+    numberOfWhitestones = 21;
+    numberOfBlackstones = 21;
+    numberOfWhiteCapstones = 1;
+    numberOfBlackCapstones = 1;
+  } else if (size === 6) {
+    numberOfWhitestones = 30;
+    numberOfBlackstones = 30;
+    numberOfWhiteCapstones = 2;
+    numberOfBlackCapstones = 2;
+  } else {
+    numberOfWhitestones = 15;
+    numberOfBlackstones = 15;
+    numberOfWhiteCapstones = 0;
+    numberOfBlackCapstones = 0;
+  }
+
+  let idCounter = 1;
+
+  for (let i = 0; i < numberOfWhitestones; i++) {
+    initialPieces.push({
+      id: `${idCounter++}`,
+      type: 'flatstone',
+      color: 'white',
+    });
+  }
+
+  for (let i = 0; i < numberOfBlackstones; i++) {
+    initialPieces.push({
+      id: `${idCounter++}`,
+      type: 'flatstone',
+      color: 'black',
+    });
+  }
+  for (let i = 0; i < numberOfWhiteCapstones; i++) {
+    initialPieces.push({
+      id: `${idCounter++}`,
+      type: 'capstone',
+      color: 'white',
+    });
+  }
+
+  for (let i = 0; i < numberOfBlackCapstones; i++) {
+    initialPieces.push({
+      id: `${idCounter++}`,
+      type: 'capstone',
+      color: 'black',
+    });
+  }
+
+  return initialPieces;
+}
+
+export function getTile(position: Position | null, tiles: TBoard): Tile | null {
+  if (!position) return null;
+  const tile = tiles.find(
+    (tile) => tile.position.x === position.x && tile.position.y === position.y,
   );
+  return tile ? tile : null;
 }
 
 /* 
