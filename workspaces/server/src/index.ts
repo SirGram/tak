@@ -202,14 +202,18 @@ const handleMakeMove = (roomId: string, move: Move) => {
     });
   }
   room.gameState.tiles = updatedTiles;
+  // remove last piece from stack
+  room.gameState.selectedStack.pop();
+  // change turn if stack is empty
+  if (room.gameState.selectedStack.length === 0) {
+    room.gameState = roundOver(gameState);
+  }
+
   sendGameUpdate(roomId, room.gameState);
   console.log(gameState);
 };
 
-const handleChangePieceStand = (
-  roomId: string,
-  pieceId: string,
-) => {
+const handleChangePieceStand = (roomId: string, pieceId: string) => {
   const room = rooms[roomId];
   if (!room) return;
 
@@ -238,8 +242,10 @@ const roundOver = (gameState: ServerGameState) => {
     updatedGameState.currentPlayer === 'black'
       ? updatedGameState.roundNumber + 1
       : updatedGameState.roundNumber;
+  updatedGameState.currentPlayer = nextPlayer;
+  updatedGameState.roundNumber = nextRoundNumber;
 
-  return gameState;
+  return updatedGameState;
 };
 const sendGameUpdate = (roomId: string, gameState: ServerGameState) => {
   io.to(roomId).emit('gameUpdated', gameState);

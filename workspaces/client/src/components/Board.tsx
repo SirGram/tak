@@ -81,6 +81,8 @@ export default function Board() {
 
     console.log(gameState);
 
+    const playerTurn = playerColor === gameState?.currentPlayer;
+
     const [shownPieces, setShownPieces] = useState<Piece3D[]>([]);
 
     const [firstMoveMade, setFirstMoveMade] = useState(false);
@@ -109,7 +111,7 @@ export default function Board() {
         gameState && gameState.selectedStack.length > 0 ? gameState.selectedStack[0] : null;
 
     function handleTileClick(position: Position3D) {
-        if (!selectedPiece) return;
+        if (!selectedPiece || !playerTurn) return;
         if (!possibleMoves.some((move) => move.x === position[0] && move.y === position[2])) return;
         const fromTile = getTileFromPiece(selectedPiece.id, gameState!.tiles);
 
@@ -125,6 +127,7 @@ export default function Board() {
     console.log(gameState?.tiles, selectedPiece);
 
     function handlePieceClick(e: ThreeEvent<MouseEvent>, pieceId: string) {
+        if (!playerTurn) return;
         e.stopPropagation();
         console.log('piece clicked');
         const piece = getPiece(pieceId, gameState!.pieces);
@@ -134,6 +137,7 @@ export default function Board() {
 
         if (tile) {
             // Piece is on the board
+            if (!isPieceAtTopFromPlayer(tile)) return;
             const pieceIndex = tile.pieces.indexOf(pieceId);
             if (pieceIndex === -1) return;
             const selectedPieceIds = tile.pieces.slice(pieceIndex);
@@ -144,13 +148,29 @@ export default function Board() {
             if (room) selectStack(room, selectedPieces);
         } else {
             // Piece is outside the board (in a pile)
-            // if piece is selected, change standing
+            if (gameState!.roundNumber === 1) {
+                // In the first round, can only select opponent's pieces
+                if (piece.color === playerColor) return;
+            } else {
+                // After first round, can only select own pieces
+                if (piece.color !== playerColor) return;
+            }
+
             if (piece && room && piece.id === selectedPiece?.id) {
-                if (piece.type === 'standingstone' || piece.type === 'flatstone') {
+                if (
+                    gameState!.roundNumber !== 1 &&
+                    (piece.type === 'standingstone' || piece.type === 'flatstone')
+                ) {
                     changePieceStand(room, piece.id);
                 }
             } else if (piece && room) selectStack(room, [piece]);
         }
+    }
+
+    function isPieceAtTopFromPlayer(tile: Tile): boolean {
+        const topPieceId = tile.pieces[tile.pieces.length - 1];
+        const topPiece = getPiece(topPieceId, gameState!.pieces);
+        return !topPiece || topPiece.color !== playerColor;
     }
     console.log(selectedPiece, gameState?.pieces);
 
@@ -187,23 +207,24 @@ export default function Board() {
                     />
 
                     {/* Render board click tiles */}
-                    {Array.from(Array(5), (_, i) => (
-                        <Fragment key={i}>
-                            {Array.from(Array(5), (_, j) => (
-                                <Fragment key={j}>
-                                    <TileModel
-                                        height={calculateTileHeight(i, j)}
-                                        position={[i, -0.3, j]}
-                                        color={i % 2 === j % 2 ? '#4e1200' : '#7e000000'}
-                                        onClick={handleTileClick}
-                                        isMovePossible={possibleMoves.some(
-                                            (move) => move.x === i && move.y === j
-                                        )}
-                                    />
-                                </Fragment>
-                            ))}
-                        </Fragment>
-                    ))}
+                    {playerTurn &&
+                        Array.from(Array(5), (_, i) => (
+                            <Fragment key={i}>
+                                {Array.from(Array(5), (_, j) => (
+                                    <Fragment key={j}>
+                                        <TileModel
+                                            height={calculateTileHeight(i, j)}
+                                            position={[i, -0.3, j]}
+                                            color={i % 2 === j % 2 ? '#4e1200' : '#7e000000'}
+                                            onClick={handleTileClick}
+                                            isMovePossible={possibleMoves.some(
+                                                (move) => move.x === i && move.y === j
+                                            )}
+                                        />
+                                    </Fragment>
+                                ))}
+                            </Fragment>
+                        ))}
                     {Array.from(Array(5), (_, i) => (
                         <Fragment key={i}>
                             <Fragment>
