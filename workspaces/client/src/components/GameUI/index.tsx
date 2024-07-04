@@ -1,6 +1,7 @@
 import GameInfo from "./GameInfo";
-import Messages from "./Messages";
+
 import History from "./History";
+import Messages from "./Messages";
 
 export default function GameUI() {
     return (

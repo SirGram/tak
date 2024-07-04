@@ -1,7 +1,7 @@
 import { Piece, PieceModel, PieceType, Position3D } from '../../../common/types';
 
 export const pieceHeights: Record<PieceType, number> = {
-    flatstone: 0.22,
+    flatstone: 0.165,
     standingstone: 0.66,
     capstone: 0.65,
 };

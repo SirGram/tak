@@ -177,6 +177,17 @@ const handleMakeMove = (roomId: string, move: Move) => {
       (pieceId) => !move.stack.some((stackPiece) => stackPiece.id === pieceId),
     );
 
+    // capstone -> standingstone
+    const lastPieceInStack = move.stack[move.stack.length - 1];
+    const topPieceId = toTile.pieces[toTile.pieces.length - 1];
+    const topPiece = gameState.pieces.find((piece) => piece.id === topPieceId);
+    if (
+      lastPieceInStack.type === 'capstone' &&
+      topPiece?.type === 'standingstone'
+    ) {
+      topPiece.type = 'flatstone';
+    }
+
     // Add stack pieces to the destination tile
     move.stack.forEach((stackPiece) => {
       if (!toTile.pieces.includes(stackPiece.id)) {

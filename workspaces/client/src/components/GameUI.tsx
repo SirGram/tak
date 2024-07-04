@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Card } from './ui/card';
 import { useSocketStore } from '../store/SocketStore';
-import Messages from './Messages';
 import { Button } from './ui/button';
 import { ChevronsLeft,  ChevronsRight } from 'lucide-react';
 import History from './History';
@@ -9,6 +8,7 @@ import useSeconds from '../hooks';
 import { useClientStore } from '../store/ClientStore';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { getFlatstones } from '../logic/board';
+import Messages from './GameUI/Messages';
 function GameInfo() {
     const { gameState, room, playerColor } = useSocketStore();
 

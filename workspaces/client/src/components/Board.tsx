@@ -124,7 +124,7 @@ export default function Board() {
         };
         makeMove(room, move);
     }
-    console.log(gameState?.tiles, selectedPiece);
+    console.log(gameState);
 
     function handlePieceClick(e: ThreeEvent<MouseEvent>, pieceId: string) {
         if (!playerTurn) return;
@@ -170,7 +170,7 @@ export default function Board() {
     function isPieceAtTopFromPlayer(tile: Tile): boolean {
         const topPieceId = tile.pieces[tile.pieces.length - 1];
         const topPiece = getPiece(topPieceId, gameState!.pieces);
-        return !topPiece || topPiece.color !== playerColor;
+        return  topPiece?.color === playerColor;
     }
     console.log(selectedPiece, gameState?.pieces);
 
