@@ -35,7 +35,7 @@ function App() {
                     className="z-10"
                     onPointerMissed={() => handleCanvasClick()}
                     shadows
-                    camera={{ position: [5, 5, 13], fov: 60 }}>
+                    camera={{ position: [8, 5, 8], rotation: [0, 0, 0], fov: 60 }}>
                     <Scene />
                 </Canvas>
             </main>

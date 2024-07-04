@@ -27,7 +27,7 @@ export function BoardModel(props: JSX.IntrinsicElements['group']) {
                 geometry={nodes.Cube.geometry}
                 material={material}
                 scale={[12.139, 0.526, 12.139]}
-                position={[8, -0.5, 8.4]}
+                position={[8, -0.53, 8.4]}
             />
         </group>
     );

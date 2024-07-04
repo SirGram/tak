@@ -61,27 +61,27 @@ export default function Pieces({
                 let position: Position3D;
                 let height: number;
 
-                if (piece.type === 'flatstone') {
+                if (piece.type === 'flatstone' || piece.type === 'standingstone') {
                     if (piece.color === 'white') {
                         const pileIndex = whiteFlatstoneCount % 3;
                         position = WHITE_PILES[pileIndex];
-                        height = Math.floor(whiteFlatstoneCount / 3) * pieceHeights[piece.type];
+                        height = Math.floor(whiteFlatstoneCount / 3) * pieceHeights['flatstone'];
                         whiteFlatstoneCount++;
                     } else {
                         const pileIndex = blackFlatstoneCount % 3;
                         position = BLACK_PILES[pileIndex];
-                        height = Math.floor(blackFlatstoneCount / 3) * pieceHeights[piece.type];
+                        height = Math.floor(blackFlatstoneCount / 3) * pieceHeights['flatstone'];
                         blackFlatstoneCount++;
                     }
                 } else {
                     // capstone
                     if (piece.color === 'white') {
                         position = WHITE_CAPSTONE_PILE;
-                        height = whiteCapstoneCount * pieceHeights[piece.type];
+                        height = whiteCapstoneCount * pieceHeights['capstone'];
                         whiteCapstoneCount++;
                     } else {
                         position = BLACK_CAPSTONE_PILE;
-                        height = blackCapstoneCount * pieceHeights[piece.type];
+                        height = blackCapstoneCount * pieceHeights['capstone'];
                         blackCapstoneCount++;
                     }
                 }
@@ -106,14 +106,16 @@ export default function Pieces({
 
     function getTopPieces(pieces: Piece3D[], board: TBoard): Set<string> {
         const topPieces = new Set<string>();
-
-        // Get top pieces on the board
+    
+        // Get clickable pieces on the board
         board.forEach((tile) => {
             if (tile.pieces.length > 0) {
-                topPieces.add(tile.pieces[tile.pieces.length - 1]);
+                // Get the last 5 pieces (or all if less than 5) of the tile
+                const clickablePieces = tile.pieces.slice(Math.max(0, tile.pieces.length - Math.sqrt(board.length)));
+                clickablePieces.forEach(pieceId => topPieces.add(pieceId));
             }
         });
-
+    
         // Get top pieces in the piles
         const piles = [...WHITE_PILES, ...BLACK_PILES, WHITE_CAPSTONE_PILE, BLACK_CAPSTONE_PILE];
         piles.forEach((pile) => {
@@ -124,7 +126,7 @@ export default function Pieces({
                 topPieces.add(pilePieces[pilePieces.length - 1].id);
             }
         });
-
+    
         return topPieces;
     }
 

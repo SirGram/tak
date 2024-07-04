@@ -57,6 +57,9 @@ io.on('connection', (socket) => {
   socket.on('makeMove', (room, move) => {
     handleMakeMove(room, move);
   });
+  socket.on('changePieceStand', (roomId, pieceId, stand) => {
+    handleChangePieceStand(roomId, pieceId);
+  });
 });
 
 const handleJoinRoom = (socket: any, roomId: string, username: string) => {
@@ -65,7 +68,7 @@ const handleJoinRoom = (socket: any, roomId: string, username: string) => {
     rooms[roomId] = {
       id: roomId,
       players: [],
-      gameState: initialGameState,
+      gameState: JSON.parse(JSON.stringify(initialGameState)), // deep copy
       messages: [],
     };
 
@@ -202,6 +205,31 @@ const handleMakeMove = (roomId: string, move: Move) => {
   sendGameUpdate(roomId, room.gameState);
   console.log(gameState);
 };
+
+const handleChangePieceStand = (
+  roomId: string,
+  pieceId: string,
+) => {
+  const room = rooms[roomId];
+  if (!room) return;
+
+  const gameState = room.gameState;
+  let updatedPieces = [...gameState.pieces];
+
+  const piece = updatedPieces.find((piece) => piece.id === pieceId);
+  if (!piece) return;
+  if (piece.type === 'standingstone') piece.type = 'flatstone';
+  else if (piece.type === 'flatstone') piece.type = 'standingstone';
+  updatedPieces = updatedPieces.map((piece) => {
+    if (piece.id === pieceId) {
+      return piece;
+    }
+    return piece;
+  });
+  room.gameState.pieces = updatedPieces;
+  sendGameUpdate(roomId, room.gameState);
+};
+
 const roundOver = (gameState: ServerGameState) => {
   const updatedGameState = gameState;
   const nextPlayer: 'white' | 'black' =

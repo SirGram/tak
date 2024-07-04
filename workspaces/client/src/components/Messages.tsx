@@ -15,7 +15,7 @@ export default function Messages() {
     function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!room || !username || !newMessage) return;
-        sendMessage(room, username, newMessage);
+        sendMessage(room, newMessage, username);
         setNewMessage('');
     }
 

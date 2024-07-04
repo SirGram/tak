@@ -61,9 +61,9 @@ export function calculateMoves(
             const originPiece = getPiece(pieceId, pieces);
             const targetablePieces = targetTile.pieces
                 .map((pieceId) => getPiece(pieceId, pieces))
-            console.log(targetablePieces);
-
-            const lastPiece = targetablePieces[targetablePieces.length - 1];
+                
+                const lastPiece = targetablePieces[targetablePieces.length - 1];
+                console.log(originPiece, lastPiece);
             // origin: piece -> target: capstone
             if (lastPiece && lastPiece.type === 'capstone') return;
             // origin: flatstone/standingstone -> target: standingstone

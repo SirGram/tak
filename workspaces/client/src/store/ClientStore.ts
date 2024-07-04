@@ -7,10 +7,6 @@ export type BoardSize = 3 | 4 | 5 | 6;
 interface BoardSelections {
     stack: Piece[];
     setStack: (value: Piece[]) => void;
-    selectedPiece: Piece | null;
-    setSelectedPiece: (value: Piece | null) => void;
-    possibleMoves: Position[];
-    setPossibleMoves: (moves: Position[]) => void;
     showRound: number;
     setShowRound: (value: number) => void;
 }
@@ -24,15 +20,7 @@ export const useClientStore = create<BoardSelections & BoardSettings>((set) => (
     stack: [],
     setStack: (newStack) => set({ stack: newStack }),
 
-    selectedPiece: null,
-    setSelectedPiece: (piece) => {
-        set({ selectedPiece: piece });
-    },
-    possibleMoves: [],
-    setPossibleMoves: (moves) => {
-        set({ possibleMoves: moves });
-    },
-    selectedColor: '#ffffff',
+    selectedColor: '#ff7b00',
     setSelectedColor: (color) => {
         set({ selectedColor: color });
     },

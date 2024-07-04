@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
-import { useSocketStore } from '../store/SocketStore';
+import { Message, useSocketStore } from '../store/SocketStore';
 import { useToast } from '../components/ui/use-toast';
-import { GameState, Move, Piece, Piece3D, Player, ServerGameState } from '../../../common/types';
+import {  Move, Piece,  Player, ServerGameState } from '../../../common/types';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
@@ -11,7 +11,7 @@ export const socket = io(SOCKET_URL, {
 });
 
 export const SocketManager = () => {
-    const { setGameState, addMessage, setRoom, setUsername, setPlayerColor, playerColor } =
+    const { setGameState, setMessages, setRoom, setUsername, setPlayerColor, playerColor } =
         useSocketStore();
 
     const { toast } = useToast();
@@ -27,7 +27,7 @@ export const SocketManager = () => {
     useEffect(() => {
         socket.on(
             'roomJoined',
-            (joinedRoomId: string, username: string, color: Player, gameState: GameState) => {
+            (joinedRoomId: string, username: string, color: Player, gameState: ServerGameState) => {
                 sendMessage(joinedRoomId, `${username} joined the room`);
                 setRoom(joinedRoomId);
                 setUsername(username);
@@ -54,9 +54,9 @@ export const SocketManager = () => {
             console.log(gameState);
         });
 
-        socket.on('messagePosted', (message: { username: string; content: string }) => {
-            console.log(message);
-            addMessage(message);
+        socket.on('messagePosted', (messages: Message[]) => {
+           
+            setMessages(messages);
         });
 
         return () => {
@@ -65,7 +65,7 @@ export const SocketManager = () => {
             socket.off('startGame');
             socket.off('messagePosted');
         };
-    }, [addMessage, setRoom, playerColor, setPlayerColor]);
+    }, [setMessages, setRoom, playerColor, setPlayerColor]);
 };
 
 export function joinRoom(roomId: string, username: string) {
@@ -74,6 +74,7 @@ export function joinRoom(roomId: string, username: string) {
 
 export function sendMessage(roomId: string, content: string, username?: string) {
     socket.emit('chatMessage', roomId, username, content);
+    console.log(roomId, content, username);
 }
 
 export function selectStack(roomId: string, pieces: Piece[]) {
@@ -83,4 +84,8 @@ export function selectStack(roomId: string, pieces: Piece[]) {
 export function makeMove(roomId: string, move: Move) {
     socket.emit('makeMove', roomId, move);
     console.log('making move', move);
+}
+
+export function changePieceStand(roomId: string, pieceId: string) {
+    socket.emit('changePieceStand', roomId, pieceId);
 }

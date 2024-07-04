@@ -8,7 +8,7 @@ import { useGLTF } from '@react-three/drei';
 import { GLTF } from 'three-stdlib';
 import { GroupProps } from '@react-three/fiber';
 import { useClientStore } from '../store/ClientStore';
-import { Position3D } from '../../../common/types';
+import { animated, useSpring } from '@react-spring/three';
 
 type GLTFResult = GLTF & {
     nodes: {
@@ -24,10 +24,8 @@ type Props = GroupProps & {
     opacity: number;
     isStanding: boolean;
 };
-
 export function Whitestone({ isSelected, opacity, isStanding, ...props }: Props) {
     const { nodes, materials } = useGLTF('/whitestone.glb') as GLTFResult;
-
     const { selectedColor } = useClientStore();
 
     const material = useMemo(() => {
@@ -37,20 +35,24 @@ export function Whitestone({ isSelected, opacity, isStanding, ...props }: Props)
         return newMaterial;
     }, [materials.Material, opacity]);
 
-    const rotation: Position3D = isStanding ? [Math.PI / 2, 0, 0] : [0, 0, 0];
-    const position: Position3D = isStanding ? [0.2, 0.4, 0.3] : [0.2, -0.9, 0.3];
+    const { rotation, position } = useSpring({
+        rotation: isStanding ? [Math.PI / 2, 0, 0] : [0, 0, 0],
+        position: isStanding ? [0.2, 0.4, 0.3] : [0.2, -0.9, 0.3],
+        config: { mass: 1, tension: 170, friction: 26 },
+    });
+
     return (
         <group {...props} dispose={null}>
-            <mesh
+            <animated.mesh
                 castShadow
                 receiveShadow
                 geometry={nodes.Cube002.geometry}
                 material={material}
-                position={position}
-                rotation={rotation}
+                position={position as any}
+                rotation={rotation as any}
                 scale={[1, 0.9, 1]}>
                 {isSelected && <meshStandardMaterial attach="material" color={selectedColor} />}
-            </mesh>
+            </animated.mesh>
         </group>
     );
 }

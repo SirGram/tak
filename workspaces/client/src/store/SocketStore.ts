@@ -3,14 +3,14 @@ import type  {ServerGameState}  from '../../../common/types';
 
 type Player = 'white' | 'black';    
 
-interface Message {
+export interface Message {
     username?: string;
     content: string;
 }
 
 interface SocketState {
     messages: Message[];
-    addMessage: (message: Message) => void;
+    setMessages: (messages: Message[]) => void;
     room: string | undefined;
     setRoom: (roomId: string) => void;
     username: string | null;
@@ -26,7 +26,7 @@ interface SocketState {
 
 export const useSocketStore = create<SocketState>((set) => ({
     messages: [],
-    addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
+    setMessages: (messages) => set({ messages }),
     room: undefined,
     setRoom: (roomId) => set({ room: roomId }),
     username: null,
