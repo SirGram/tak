@@ -6,7 +6,7 @@ import { Blackcapstone } from '../models/Blackcapstone';
 import { Whitestone } from '../models/Whitestone';
 import { Whitecapstone } from '../models/Whitecapstone';
 import type { Piece, Position3D, TBoard, PieceModel } from '../../../common/types';
-import { Piece3D, pieceHeights } from '../logic/pieces';
+import { Piece3D, pieceHeights } from '../logic/types';
 import { useSocketStore } from '../store/SocketStore';
 
 export type Piece3DExtended = Piece3D & {};

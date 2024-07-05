@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 import { Card } from './ui/card';
 import { useSocketStore } from '../store/SocketStore';
 import { Button } from './ui/button';
-import { ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ChevronsDown, ChevronsLeft, ChevronsRight, ChevronsUp } from 'lucide-react';
 import History from './History';
 import useSeconds from '../hooks';
 import { useClientStore } from '../store/ClientStore';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { getFlatstones } from '../logic/board';
 import Messages from './GameUI/Messages';
-import { leaveRoom } from '../socket/SocketManager';
+import { leaveRoom } from '../manager/SocketManager';
+import { Piece, Tile } from '../../../common/types';
 function GameInfo() {
     const { gameState, room, playerColor } = useSocketStore();
 
@@ -52,6 +53,7 @@ function GameInfo() {
     }, [winner, roundNumber, gameState]);
 
     const [isOpen, setIsOpen] = useState(true);
+    const [is2DBoardOpen, setIs2DBoardOpen] = useState(false);
 
     function formatGameTime(time: number) {
         const hours = Math.floor(time / 3600);
@@ -74,86 +76,155 @@ function GameInfo() {
         }
     };
 
+    const renderBoard2D = () => {
+        if (!gameState) return null;
+        const boardSize = Math.sqrt(gameState.tiles.length);
+        const board: (Piece | null)[][] = Array(boardSize)
+            .fill(null)
+            .map(() => Array(boardSize).fill(null));
+
+        gameState.tiles.forEach((tile: Tile) => {
+            if (tile.pieces.length > 0) {
+                const pieceId = tile.pieces[tile.pieces.length - 1];
+                const piece = gameState.pieces.find((p) => p.id === pieceId);
+                if (piece) {
+                    board[tile.position.y][tile.position.x] = piece;
+                }
+            }
+        });
+
+        return (
+            <div className="w-48 h-48 p-2 bg-gray-200 dark:bg-gray-900 rounded-lg shadow-inner">
+                <div
+                    className="w-full h-full grid gap-[1px] bg-gray-400 dark:bg-gray-700"
+                    style={{ gridTemplateColumns: `repeat(${boardSize}, 1fr)` }}>
+                    {board.map((row, y) =>
+                        row.map((piece, x) => (
+                            <div
+                                key={`${x}-${y}`}
+                                className={`aspect-square flex items-center justify-center bg-gray-100 dark:bg-gray-950`}>
+                                {piece && (
+                                    <div
+                                        className={`w-4/5 h-4/5 ${
+                                            piece.color === 'black'
+                                                ? 'rounded-full'
+                                                : 'rounded-sm w-4/6 h-4/6'
+                                        } ${
+                                            piece.color === 'white'
+                                                ? 'bg-yellow-100 border-yellow-300'
+                                                : 'bg-orange-950 border-orange-900'
+                                        } border-2 shadow-md transition-transform hover:scale-110`}
+                                        title={`${piece.color} ${piece.type}`}
+                                    />
+                                )}
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+        );
+    };
     return (
         <>
             {' '}
             <div className="mt-4 fixed w-full justify-center flex z-20">
                 <div className="flex-1 w-full items-center flex flex-col">
                     <div className="flex gap-4">
-                        <Card className="overflow-hidden">
-                            <Collapsible
-                                open={isOpen}
-                                onOpenChange={setIsOpen}
-                                className="w-fit flex items-center justify-between h-10">
-                                <div className="flex items-center justify-between gap-2 pl-4">
-                                    <span className="pr-2 border-r border-border flex items-center gap-1">
-                                        <span> Turn:</span>
-                                        <b>
-                                            {currentPlayer
-                                                ? `${currentPlayer.charAt(0).toUpperCase()}${currentPlayer.slice(1).toLowerCase()}`
-                                                : ''}
-                                        </b>
-                                    </span>
-                                    <span className=" flex items-center gap-1">
-                                        <span>Player:</span>
-                                        <b>
-                                            {playerColor
-                                                ? `${playerColor.charAt(0).toUpperCase()}${playerColor.slice(1).toLowerCase()}`
-                                                : ''}
-                                        </b>
-                                    </span>
-                                </div>
-                                <CollapsibleContent className=" flex flex-wrap items-center justify-center gap-2 mx-2">
-                                    <span className="pl-2 pr-2 border-r border-l border-border flex items-center gap-1">
-                                        <span> Round:</span> <b>{showRound}</b>
-                                    </span>
-                                    <span className="pr-2 border-r border-border flex items-center gap-1">
-                                        <span> Room: </span>
-                                        <b>{room}</b>
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                        <span>Time:</span>
-                                        <b>{formatGameTime(seconds)}</b>
-                                    </span>
-                                    <Button
-                                        onClick={handleExitRoom}
-                                        variant={'default'}
-                                        className="m-2">
-                                        Exit Room
-                                    </Button>
-                                </CollapsibleContent>
-                                <CollapsibleTrigger asChild className=" h-full">
-                                    <Button variant="ghost" size="sm" className="w-9 p-0 m-0">
-                                        {isOpen ? (
-                                            <ChevronsLeft className="h-full w-4" />
-                                        ) : (
-                                            <ChevronsRight className="h-full w-4" />
-                                        )}
+                        <div className="flex flex-col ">
+                            <Card className="overflow-hidden h-10">
+                                <Collapsible
+                                    open={isOpen}
+                                    onOpenChange={setIsOpen}
+                                    className="w-fit flex items-center justify-between h-10">
+                                    <div className="flex items-center justify-between gap-2 pl-4">
+                                        <span className="pr-2 border-r border-border flex items-center gap-1">
+                                            <span> Turn:</span>
+                                            <b>
+                                                {currentPlayer
+                                                    ? `${currentPlayer.charAt(0).toUpperCase()}${currentPlayer.slice(1).toLowerCase()}`
+                                                    : ''}
+                                            </b>
+                                        </span>
+                                        <span className=" flex items-center gap-1">
+                                            <span>Player:</span>
+                                            <b>
+                                                {playerColor
+                                                    ? `${playerColor.charAt(0).toUpperCase()}${playerColor.slice(1).toLowerCase()}`
+                                                    : ''}
+                                            </b>
+                                        </span>
+                                    </div>
+                                    <CollapsibleContent className=" flex flex-wrap items-center justify-center gap-2 mx-2">
+                                        <span className="pl-2 pr-2 border-r border-l border-border flex items-center gap-1">
+                                            <span> Round:</span> <b>{showRound}</b>
+                                        </span>
+                                        <span className="pr-2 border-r border-border flex items-center gap-1">
+                                            <span> Room: </span>
+                                            <b>{room}</b>
+                                        </span>
+                                        <span className="flex items-center gap-1">
+                                            <span>Time:</span>
+                                            <b>{formatGameTime(seconds)}</b>
+                                        </span>
+                                        <Button
+                                            onClick={handleExitRoom}
+                                            variant={'default'}
+                                            className="m-2">
+                                            Exit Room
+                                        </Button>
+                                    </CollapsibleContent>
+                                    <CollapsibleTrigger asChild className=" h-full">
+                                        <Button variant="ghost" size="sm" className="w-9 p-0 m-0">
+                                            {isOpen ? (
+                                                <ChevronsLeft className="h-full w-4" />
+                                            ) : (
+                                                <ChevronsRight className="h-full w-4" />
+                                            )}
 
-                                        <span className="sr-only">Toggle</span>
-                                    </Button>
-                                </CollapsibleTrigger>
-                            </Collapsible>{' '}
-                        </Card>
-
+                                            <span className="sr-only">Toggle</span>
+                                        </Button>
+                                    </CollapsibleTrigger>
+                                </Collapsible>{' '}
+                            </Card>
+                            {message && (
+                                <Card className="w-fit mx-auto p-2 mt-2  flex justify-center">
+                                    {message}
+                                </Card>
+                            )}
+                        </div>
                         <Card
-                            className="w-fit flex gap-2 h-10 px-2 items-center "
+                            className="w-fit flex gap-2 h-fit px-2 items-center "
                             title="Number of flatstones">
-                            <span className="pr-2 h-full items-center flex gap-1 font-semibold">
-                                {blackFlatstones}
-                                <div className="size-6 bg-orange-950 border-foreground border-2  rounded-full"></div>
-                            </span>
+                            <Collapsible open={is2DBoardOpen} onOpenChange={setIs2DBoardOpen}>
+                                <div className="flex items-center justify-between gap-2 pl-4 h-10">
+                                    <span className="pr-2 h-full items-center flex gap-1 font-semibold">
+                                        {blackFlatstones}
+                                        <div className="size-6 bg-orange-950  border-orange-900 border-foreground border-2  rounded-full"></div>
+                                    </span>
 
-                            <div className="py-1 w-[1px] h-6 bg-muted "></div>
-                            <span className=" h-full items-center flex  gap-1 font-semibold">
-                                <div className="size-6 bg-brown border-muted border-2 bg-yellow-100 "></div>
-                                {whiteFlatstones}
-                            </span>
+                                    <div className="py-1 w-[1px] h-6 bg-muted dark:bg-gray-600 "></div>
+                                    <span className=" h-full items-center flex  gap-1 font-semibold">
+                                        <div className="size-6 bg-brown  border-yellow-300 border-2 bg-yellow-100 rounded-sm "></div>
+                                        {whiteFlatstones}
+                                    </span>
+                                    <CollapsibleTrigger asChild className=" h-full">
+                                        <Button variant="ghost" size="sm" className="w-9 p-0 m-0">
+                                            {is2DBoardOpen ? (
+                                                <ChevronsUp className="h-full w-4" />
+                                            ) : (
+                                                <ChevronsDown className="h-full w-4" />
+                                            )}
+
+                                            <span className="sr-only">Toggle</span>
+                                        </Button>
+                                    </CollapsibleTrigger>
+                                </div>
+                                <CollapsibleContent className="p-1 pb-2">
+                                    {renderBoard2D()}
+                                </CollapsibleContent>
+                            </Collapsible>
                         </Card>
                     </div>
-                    {message && (
-                        <Card className="w-fit p-2 mt-2  flex justify-center">{message}</Card>
-                    )}
                 </div>
             </div>
         </>

@@ -5,7 +5,13 @@ import express from 'express';
 
 import http from 'http';
 import path from 'path';
-import { getTile } from './logic/logic';
+import {
+  checkRoadWin,
+  getFlatstones,
+  getTile,
+  isAnyPlayerWithoutPieces,
+  isBoardFull,
+} from './logic/logic';
 
 const app = express();
 const server = http.createServer(app);
@@ -244,6 +250,9 @@ const handleMakeMove = (roomId: string, move: Move) => {
   room.gameState.tiles = updatedTiles;
   // remove first piece from stack
   room.gameState.selectedStack.shift();
+  // check game over
+  room.gameState = checkGameOver(gameState);
+
   // change turn if stack is empty
   if (room.gameState.selectedStack.length === 0) {
     room.gameState = roundOver(gameState);
@@ -272,6 +281,62 @@ const handleChangePieceStand = (roomId: string, pieceId: string) => {
   });
   room.gameState.pieces = updatedPieces;
   sendGameUpdate(roomId, room.gameState);
+};
+
+const checkGameOver = (gameState: ServerGameState): ServerGameState => {
+  const updatedGameState = { ...gameState };
+
+  // Check roads
+  const isWhiteRoad = checkRoadWin(
+    updatedGameState.tiles,
+    'white',
+    updatedGameState.pieces,
+  );
+  if (isWhiteRoad) {
+    updatedGameState.winner = 'white';
+    return updatedGameState;
+  }
+  const isBlackRoad = checkRoadWin(
+    updatedGameState.tiles,
+    'black',
+    updatedGameState.pieces,
+  );
+  if (isBlackRoad) {
+    updatedGameState.winner = 'black';
+    return updatedGameState;
+  }
+
+  // Check empty tiles and selectable pieces
+  const boardFull = isBoardFull(updatedGameState.tiles);
+  const playerWithNoPieces = isAnyPlayerWithoutPieces(
+    updatedGameState.pieces,
+    updatedGameState.tiles,
+  );
+  console.log(boardFull, playerWithNoPieces);
+  if (boardFull || playerWithNoPieces) {
+    const whiteFlatstones = getFlatstones(
+      updatedGameState.tiles,
+      'white',
+      updatedGameState.pieces,
+    );
+    const blackFlatstones = getFlatstones(
+      updatedGameState.tiles,
+      'black',
+      updatedGameState.pieces,
+    );
+
+    // Win based on flatstones number
+    if (whiteFlatstones > blackFlatstones) {
+      updatedGameState.winner = 'white';
+    } else if (whiteFlatstones < blackFlatstones) {
+      updatedGameState.winner = 'black';
+    } else {
+      updatedGameState.winner = 'tie';
+    }
+    console.log(boardFull, whiteFlatstones, blackFlatstones);
+  }
+
+  return updatedGameState;
 };
 
 const roundOver = (gameState: ServerGameState) => {

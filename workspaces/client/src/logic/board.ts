@@ -1,4 +1,4 @@
-import { Piece, Piece3D, PieceColor, Position, TBoard, Tile } from '../../../common/types';
+import { Piece, PieceColor, Position, TBoard, Tile } from '../../../common/types';
 
 export function getTile(position: Position, tiles: TBoard): Tile | null {
     const tile =
@@ -38,6 +38,9 @@ export function isBoardFull(tiles: TBoard): boolean {
     return tiles.every((tile) => tile.pieces.length > 0);
 }
 
+export function isBoardEmpty(tiles: TBoard): boolean {
+  return tiles.every((tile) => tile.pieces.length === 0);
+}
 
 export function calculateMoves(
     pieceId: string,
@@ -59,14 +62,13 @@ export function calculateMoves(
         const newY = tilePosition.y + direction.y;
         if (direction.x === 0 && direction.y === 0) {
             possibleMoves.push({ x: tilePosition.x, y: tilePosition.y });
-            return; 
+            return;
         }
         if (newX >= 0 && newX < boardSize && newY >= 0 && newY < boardSize) {
             const targetTile = getTile({ x: newX, y: newY }, tiles);
             if (!targetTile) return;
             const originPiece = getPiece(pieceId, pieces);
-            const targetablePieces = targetTile.pieces
-                .map((pieceId) => getPiece(pieceId, pieces))
+            const targetablePieces = targetTile.pieces.map((pieceId) => getPiece(pieceId, pieces));
             console.log(targetablePieces);
 
             const lastPiece = targetablePieces[targetablePieces.length - 1];
@@ -87,17 +89,8 @@ export function calculateMoves(
 export function getFlatstones(tiles: Tile[], color: PieceColor, pieces: Piece[]): number {
     let number = 0;
     tiles.forEach((tile: Tile) => {
-        const lastTilePiece = getPiece(tile.pieces[tile.pieces.length - 1], pieces) ;
+        const lastTilePiece = getPiece(tile.pieces[tile.pieces.length - 1], pieces);
         if (lastTilePiece?.color == color && lastTilePiece.type == 'flatstone') number += 1;
     });
     return number;
-}
-
-export function calculatePieceHeight(pieceId: string, tilePieces: Piece3D[]): number {
-    let extraHeight = 0;
-    for (const piece of tilePieces) {
-        if (piece.id == pieceId) break;
-        extraHeight += piece.height;
-    }
-    return extraHeight;
 }

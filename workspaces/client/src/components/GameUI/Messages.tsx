@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { useSocketStore } from '../../store/SocketStore';
 import { Input } from '../ui/input';
-import { sendMessage } from '../../socket/SocketManager';
+import { sendMessage } from '../../manager/SocketManager';
 
 export default function Messages() {
     const { messages, room, username } = useSocketStore();

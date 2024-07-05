@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { joinRoom } from '../socket/SocketManager';
+import { joinRoom } from '../manager/SocketManager';
 import { Card } from './ui/card';
 
 export default function JoinRoomCard() {

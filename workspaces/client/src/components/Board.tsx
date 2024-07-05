@@ -2,21 +2,14 @@ import { Fragment } from 'react/jsx-runtime';
 import { BoardModel } from '../models/BoardModel';
 import { Color, ThreeEvent } from '@react-three/fiber';
 import { useClientStore } from '../store/ClientStore';
-import {
-    calculateMoves,
-    calculatePieceHeight,
-    getPiece,
-    getTile,
-    getTileFromPiece,
-} from '../logic/board';
+import { calculateMoves, getPiece, getTile, getTileFromPiece } from '../logic/board';
 import { Candle } from '../models/Candle';
 import Pieces from './Pieces';
-import { changePieceStand, makeMove, selectStack } from '../socket/SocketManager';
+import { changePieceStand, makeMove, selectStack } from '../manager/SocketManager';
 import { useSocketStore } from '../store/SocketStore';
 import { Move, Piece, Position, Position3D, Tile } from '../../../common/types';
 import { useEffect, useState } from 'react';
-import { Piece3D, pieceHeights } from '../logic/pieces';
-import { get } from 'http';
+import { Piece3D, pieceHeights } from '../logic/types';
 
 interface TileProps {
     position: [x: number, y: number, z: number];
@@ -27,9 +20,7 @@ interface TileProps {
 }
 
 function TileModel({ position, color, onClick, isMovePossible, height }: TileProps) {
-    const [x, y, z] = position;
     const originalPosition = position;
-    const elevatedPosition: [number, number, number] = [x, y + height + 0.07, z]; // Use the height prop
 
     const onClickHandler = (e: ThreeEvent<MouseEvent>) => {
         e.stopPropagation();

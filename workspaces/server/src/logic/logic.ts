@@ -8,6 +8,7 @@ import {
   TBoard,
   Tile,
 } from '../../../common/types';
+import { DFS } from '../utils/utils';
 
 const createTile = (position: Position): Tile => {
   return {
@@ -109,7 +110,7 @@ export function getTile(position: Position | null, tiles: TBoard): Tile | null {
 
 /* 
 
-function checkRound() {
+function checkGameOver() {
     const playerColor = currentPlayer;
     const enemyColor = currentPlayer === 'white' ? 'black' : 'white';
 
@@ -117,29 +118,7 @@ function checkRound() {
     const blackFlatstones = getFlatstones(tiles, 'black', pieces);
     setFlatstones({ white: whiteFlatstones, black: blackFlatstones });
 
-    //check roads
-    const playerWin = checkRoadWin(tiles, playerColor, pieces);
-    if (!playerWin) {
-        const enemyWin = checkRoadWin(tiles, enemyColor, pieces);
-        if (enemyWin) {
-            setWinner(enemyColor);
-            return;
-        }
-    } else {
-        setWinner(playerColor);
-        return;
-    }
-
-    //check empty tiles and selectable pieces
-    const boardFull = isBoardFull(tiles);
-    const playerWithNoPieces = isAnyPlayerWithoutPieces(pieces);
-    console.log(boardFull, playerWithNoPieces);
-    if (boardFull || playerWithNoPieces) {
-        if (whiteFlatstones > blackFlatstones) setWinner('white');
-        else if (whiteFlatstones < blackFlatstones) setWinner('black');
-        else setWinner('tie');
-        console.log(boardFull, whiteFlatstones, blackFlatstones);
-    }
+   
 } 
 
 export function isAnyPlayerWithoutPieces(pieces: Piece3D[]): boolean {
@@ -162,30 +141,86 @@ export function isAnyPlayerWithoutPieces(pieces: Piece3D[]): boolean {
     return !whiteHasPieces || !blackHasPieces;
 }
     
-export function checkRoadWin(tiles: Tile[], color: PieceColor, pieces: Piece3D[]): boolean {
-    const BoardSize = Math.sqrt(tiles.length);
-    const grid: number[][] = [];
-
-    for (let i = 0; i < BoardSize; i++) {
-        grid[i] = [];
-        for (let j = 0; j < BoardSize; j++) {
-            grid[i][j] = 0;
-        }
-    }
-
-    tiles.forEach((tile) => {
-        const lastPiece: Piece3D | null =
-            tile.pieces.length > 0 ? getPiece(tile.pieces[tile.pieces.length - 1], pieces) : null;
-
-        if (lastPiece?.color == color) {
-            grid[tile.position.x][tile.position.y] = 1;
-        }
-    });
-
-    console.log(tiles, grid, BoardSize);
-
-    const isRoad = DFS(grid);
-
-    return isRoad;
-}
 */
+export function checkRoadWin(
+  tiles: Tile[],
+  color: PieceColor,
+  pieces: Piece[],
+): boolean {
+  const BoardSize = Math.sqrt(tiles.length);
+  const grid: number[][] = [];
+
+  for (let i = 0; i < BoardSize; i++) {
+    grid[i] = [];
+    for (let j = 0; j < BoardSize; j++) {
+      grid[i][j] = 0;
+    }
+  }
+
+  tiles.forEach((tile) => {
+    const lastPiece: Piece | null =
+      tile.pieces.length > 0
+        ? getPiece(tile.pieces[tile.pieces.length - 1], pieces)
+        : null;
+
+    if (lastPiece?.color == color) {
+      grid[tile.position.x][tile.position.y] = 1;
+    }
+  });
+
+  console.log(tiles, grid, BoardSize);
+
+  const isRoad = DFS(grid);
+
+  return isRoad;
+}
+
+export function isBoardFull(tiles: TBoard): boolean {
+  return tiles.every((tile) => tile.pieces.length > 0);
+}
+
+function getTileFromPiece(pieceId: string, tiles: TBoard): Tile | null {
+  return tiles.find((tile) => tile.pieces.includes(pieceId)) ?? null;
+}
+
+function getPiece(pieceId: string, pieces: Piece[]): Piece | null {
+  const piece = pieces.find((p) => p.id === pieceId);
+  return piece ?? null;
+}
+
+export function getFlatstones(
+  tiles: Tile[],
+  color: PieceColor,
+  pieces: Piece[],
+): number {
+  let number = 0;
+  tiles.forEach((tile: Tile) => {
+    const lastTilePiece = getPiece(tile.pieces[tile.pieces.length - 1], pieces);
+    if (lastTilePiece?.color == color && lastTilePiece.type == 'flatstone')
+      number += 1;
+  });
+  return number;
+}
+
+export function isAnyPlayerWithoutPieces(
+  pieces: Piece[],
+  board: TBoard,
+): boolean {
+  let whiteHasPieces = false;
+  let blackHasPieces = false;
+
+  // Check if any pieces are on the board
+  pieces.forEach((piece) => {
+    const tile = getTileFromPiece(piece.id, board);
+    if (tile) {
+      if (piece.color === 'white') {
+        whiteHasPieces = true;
+      } else if (piece.color === 'black') {
+        blackHasPieces = true;
+      }
+    }
+  });
+
+  // Check if either player has no pieces
+  return !whiteHasPieces || !blackHasPieces;
+}

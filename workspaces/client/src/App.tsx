@@ -1,14 +1,17 @@
 import { Canvas } from '@react-three/fiber';
 import Scene from './components/Scene';
-import { SocketManager } from './socket/SocketManager';
+import { SocketManager } from './manager/SocketManager';
 import { useSocketStore } from './store/SocketStore';
 import ThemeButton from './components/ThemeButton';
 import GameUI from './components/GameUI';
 import JoinRoomCard from './components/JoinRoomCard';
 import { Toaster } from './components/ui/toaster';
+import { SoundManager } from './manager/SoundManager';
+import AudioButton from './components/AudioButton';
 
 function App() {
     SocketManager();
+    SoundManager();
 
     const { gameState } = useSocketStore();
 
@@ -29,6 +32,7 @@ function App() {
                     </>
                 )}
                 <div className="fixed top-2 right-2 z-20">
+                    <AudioButton/>
                     <ThemeButton />
                 </div>
                 <Canvas
