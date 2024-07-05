@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { Message, useSocketStore } from '../store/SocketStore';
 import { useToast } from '../components/ui/use-toast';
-import {  Move, Piece,  Player, ServerGameState } from '../../../common/types';
+import { Move, Piece, Player, ServerGameState } from '../../../common/types';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
@@ -28,7 +28,7 @@ export const SocketManager = () => {
         socket.on(
             'roomJoined',
             (joinedRoomId: string, username: string, color: Player, gameState: ServerGameState) => {
-                sendMessage(joinedRoomId, `${username} joined the room`);
+                sendMessage(joinedRoomId, `${username} joined the room`, `System`);
                 setRoom(joinedRoomId);
                 setUsername(username);
                 setPlayerColor(color);
@@ -55,8 +55,19 @@ export const SocketManager = () => {
         });
 
         socket.on('messagePosted', (messages: Message[]) => {
-           
             setMessages(messages);
+        });
+
+        socket.on('roomLeft', () => {
+            setRoom(null);
+            setUsername(null);
+            setPlayerColor(null);
+            setGameState(null);
+            toast({
+                title: 'Left the room',
+                description: 'You have successfully left the room',
+                variant: 'default',
+            });
         });
 
         return () => {
@@ -64,12 +75,17 @@ export const SocketManager = () => {
             socket.off('roomFull');
             socket.off('startGame');
             socket.off('messagePosted');
+            socket.off('roomLeft');
         };
     }, [setMessages, setRoom, playerColor, setPlayerColor]);
 };
 
 export function joinRoom(roomId: string, username: string) {
     socket.emit('joinRoom', roomId, username);
+}
+
+export function leaveRoom(roomId: string) {
+    socket.emit('leaveRoom', roomId);
 }
 
 export function sendMessage(roomId: string, content: string, username?: string) {

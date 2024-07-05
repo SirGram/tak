@@ -76,12 +76,17 @@ const handleJoinRoom = (socket: any, roomId: string, username: string) => {
   }
 
   // Check room space
+  // Determine player color based on number of players
+  const playerColor = rooms[roomId].players.length === 1 ? 'white' : 'black';
   if (rooms[roomId].players.length < 2) {
-    rooms[roomId].players.push(socket.id);
+    rooms[roomId].players.push({
+      id: socket.id,
+      username: username,
+      color: playerColor,
+    });
     socket.join(roomId);
 
-    // Determine player color based on number of players
-    const playerColor = rooms[roomId].players.length === 1 ? 'white' : 'black';
+    socket.join(roomId);
     socket.emit(
       'roomJoined',
       roomId,
@@ -103,14 +108,38 @@ const handleJoinRoom = (socket: any, roomId: string, username: string) => {
 
 const handleLeaveRoom = (socket: any, roomId: string) => {
   if (rooms[roomId]) {
-    rooms[roomId].players = rooms[roomId].players.filter(
-      (id) => id !== socket.id,
+    const leavingPlayer = rooms[roomId].players.find(
+      (player) => player.id == socket.id,
     );
+    rooms[roomId].players = rooms[roomId].players.filter(
+      (player) => player.id != socket.id,
+    );
+
+    console.log(rooms[roomId].players);
+
     socket.leave(roomId);
     console.log(`User ${socket.id} left room ${roomId}`);
 
+    // Emit roomLeft event to the leaving player
+    socket.emit('roomLeft');
+    console.log(leavingPlayer, 'leaving player');
+
+    if (leavingPlayer) {
+      // send message to remaining players
+      const username = 'System';
+      const content = `${leavingPlayer.username} left the room `;
+      const chatMessage = { username, content };
+      rooms[roomId].messages.push(chatMessage);
+      io.to(roomId).emit('messagePosted', rooms[roomId].messages);
+    }
+
     if (rooms[roomId].players.length === 0) {
       delete rooms[roomId];
+      console.log(`Room ${roomId} deleted because it became empty`);
+    } else {
+      // If there are still players in the room, update the game state
+      rooms[roomId].gameState.gameStarted = false;
+      sendGameUpdate(roomId, rooms[roomId].gameState);
     }
   }
 };
@@ -213,8 +242,8 @@ const handleMakeMove = (roomId: string, move: Move) => {
     });
   }
   room.gameState.tiles = updatedTiles;
-  // remove last piece from stack
-  room.gameState.selectedStack.pop();
+  // remove first piece from stack
+  room.gameState.selectedStack.shift();
   // change turn if stack is empty
   if (room.gameState.selectedStack.length === 0) {
     room.gameState = roundOver(gameState);

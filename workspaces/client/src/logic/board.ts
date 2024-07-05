@@ -38,12 +38,14 @@ export function isBoardFull(tiles: TBoard): boolean {
     return tiles.every((tile) => tile.pieces.length > 0);
 }
 
+
 export function calculateMoves(
     pieceId: string,
     tiles: TBoard,
     pieces: Piece[],
     directions: Position[]
 ): Position[] {
+    console.log(pieceId, tiles, pieces, directions);
     // piece not on  board
     if (!isPieceOnBoard(pieceId, tiles)) return getEmptyBoardPositions(tiles);
     //piece on board
@@ -55,15 +57,19 @@ export function calculateMoves(
     directions.forEach((direction) => {
         const newX = tilePosition.x + direction.x;
         const newY = tilePosition.y + direction.y;
+        if (direction.x === 0 && direction.y === 0) {
+            possibleMoves.push({ x: tilePosition.x, y: tilePosition.y });
+            return; 
+        }
         if (newX >= 0 && newX < boardSize && newY >= 0 && newY < boardSize) {
             const targetTile = getTile({ x: newX, y: newY }, tiles);
             if (!targetTile) return;
             const originPiece = getPiece(pieceId, pieces);
             const targetablePieces = targetTile.pieces
                 .map((pieceId) => getPiece(pieceId, pieces))
-                
-                const lastPiece = targetablePieces[targetablePieces.length - 1];
-                console.log(originPiece, lastPiece);
+            console.log(targetablePieces);
+
+            const lastPiece = targetablePieces[targetablePieces.length - 1];
             // origin: piece -> target: capstone
             if (lastPiece && lastPiece.type === 'capstone') return;
             // origin: flatstone/standingstone -> target: standingstone

@@ -2,20 +2,21 @@ import { useEffect, useState } from 'react';
 import { Card } from './ui/card';
 import { useSocketStore } from '../store/SocketStore';
 import { Button } from './ui/button';
-import { ChevronsLeft,  ChevronsRight } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 import History from './History';
 import useSeconds from '../hooks';
 import { useClientStore } from '../store/ClientStore';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { getFlatstones } from '../logic/board';
 import Messages from './GameUI/Messages';
+import { leaveRoom } from '../socket/SocketManager';
 function GameInfo() {
     const { gameState, room, playerColor } = useSocketStore();
 
     const { showRound } = useClientStore();
 
-    const { gameStarted, currentPlayer, roundNumber, winner, } = gameState!;
-    
+    const { gameStarted, currentPlayer, roundNumber, winner } = gameState!;
+
     const whiteFlatstones = getFlatstones(gameState!.tiles, 'white', gameState!.pieces);
     const blackFlatstones = getFlatstones(gameState!.tiles, 'black', gameState!.pieces);
 
@@ -67,9 +68,11 @@ function GameInfo() {
             return `${formattedMinutes}:${formattedSeconds}`;
         }
     }
-    const handleExitRoom = () => { 
-        
-    }
+    const handleExitRoom = () => {
+        if (room) {
+            leaveRoom(room);
+        }
+    };
 
     return (
         <>
@@ -112,8 +115,12 @@ function GameInfo() {
                                         <span>Time:</span>
                                         <b>{formatGameTime(seconds)}</b>
                                     </span>
-                                    <Button onClick={handleExitRoom}
-                                        variant={'default'} className='m-2'>Exit Room</Button>
+                                    <Button
+                                        onClick={handleExitRoom}
+                                        variant={'default'}
+                                        className="m-2">
+                                        Exit Room
+                                    </Button>
                                 </CollapsibleContent>
                                 <CollapsibleTrigger asChild className=" h-full">
                                     <Button variant="ghost" size="sm" className="w-9 p-0 m-0">

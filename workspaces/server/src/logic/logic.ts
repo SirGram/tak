@@ -109,49 +109,6 @@ export function getTile(position: Position | null, tiles: TBoard): Tile | null {
 
 /* 
 
-
-    placePiece(pieceId, position) {
-        set((state) => ({
-            tiles: state.tiles.map((tile) =>
-                tile.position.x === position.x && tile.position.y === position.y
-                    ? { ...tile, pieces: [...tile.pieces, pieceId] }
-                    : tile
-            ),
-        }));
-    },
-    movePiece(pieceId: string, newPosition: Position) {
-        set((state) => {
-            const currentTileIndex = state.tiles.findIndex((tile) => tile.pieces.includes(pieceId));
-            if (currentTileIndex === -1) {
-                return state;
-            }
-
-            const targetTileIndex = state.tiles.findIndex(
-                (tile) => tile.position.x === newPosition.x && tile.position.y === newPosition.y
-            );
-
-            if (targetTileIndex === -1) {
-                return state;
-            }
-
-            const updatedTiles = [...state.tiles];
-
-            // Find the index of the piece within the current tile
-            const pieceIndex = updatedTiles[currentTileIndex].pieces.indexOf(pieceId);
-
-            // If the piece is found within the current tile, move it
-            if (pieceIndex !== -1) {
-                // Remove the piece from the current tile
-                updatedTiles[currentTileIndex].pieces.splice(pieceIndex, 1);
-                // Add the piece to the target tile
-                updatedTiles[targetTileIndex].pieces.push(pieceId);
-            }
-
-            // Return the new state with updated tiles
-            return { tiles: updatedTiles };
-        });
-    },
-
 function checkRound() {
     const playerColor = currentPlayer;
     const enemyColor = currentPlayer === 'white' ? 'black' : 'white';

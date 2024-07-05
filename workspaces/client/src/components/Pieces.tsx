@@ -53,8 +53,11 @@ export default function Pieces({
                     stackHeights[tileKey] = 0;
                 }
 
-                const pieceHeight = stackHeights[tileKey];
-                stackHeights[tileKey] += pieceHeights[piece.type];
+                const pieceIndex = tile.pieces.indexOf(piece.id);
+                const pieceHeight = tile.pieces.slice(0, pieceIndex).reduce((height, pieceId) => {
+                    const p = pieces.find((p) => p.id === pieceId);
+                    return height + (p ? pieceHeights[p.type] : 0);
+                }, 0);
 
                 return {
                     ...piece,
@@ -137,6 +140,7 @@ export default function Pieces({
 
         return topPieces;
     }
+    console.log(pieces, board);
 
     return (
         <>
@@ -168,7 +172,7 @@ function Piece({
         position: isPieceSelected
             ? [piece.position[0], piece.position[1] + 2, piece.position[2]]
             : piece.position,
-        config: { mass: 1, tension: 200, friction: 20 },
+        config: { mass: 0.5, tension: 200, friction: 20 },
     });
 
     const isPieceStanding = piece.type === 'standingstone';

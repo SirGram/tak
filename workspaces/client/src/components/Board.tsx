@@ -81,31 +81,37 @@ export default function Board() {
 
     console.log(gameState);
 
-    const playerTurn = playerColor === gameState?.currentPlayer;
+    const playerTurn = playerColor === gameState?.currentPlayer && gameState?.gameStarted;
 
     const [shownPieces, setShownPieces] = useState<Piece3D[]>([]);
 
-    const [firstMoveMade, setFirstMoveMade] = useState(false);
-
-    const directions = [
-        { x: 0, y: 0 },
+    const initialDirections = [
         { x: 0, y: 1 },
         { x: 0, y: -1 },
         { x: -1, y: 0 },
         { x: 1, y: 0 },
     ];
-    const [allowedDirections, setAllowedDirections] = useState<Position[]>(directions);
+    const [allowedDirections, setAllowedDirections] = useState<Position[]>(initialDirections);
+    const [firstMove, setFirstMove] = useState(false);
 
-    const updateAllowedDirections = (lastPosition: Position3D) => {
-        const dx = lastPosition[0] - selectedPiece!.position[0];
-        const dy = lastPosition[2] - selectedPiece!.position[2];
+    const updateAllowedDirections = (lastPosition: Position) => {
+        if (!selectedPiece) return;
+
+        const selectedPieceTile = getTileFromPiece(selectedPiece.id, gameState!.tiles);
+        if (!selectedPieceTile) return;
+
+        const dx = lastPosition.x - selectedPieceTile.position.x;
+        const dy = lastPosition.y - selectedPieceTile.position.y;
 
         const updatedAllowedDirection = [{ x: dx, y: dy }];
         // leave pieces below stack square
         updatedAllowedDirection.push({ x: 0, y: 0 });
 
         setAllowedDirections(updatedAllowedDirection);
+        setFirstMove(true);
     };
+
+    console.log(allowedDirections);
 
     const selectedPiece: Piece | null =
         gameState && gameState.selectedStack.length > 0 ? gameState.selectedStack[0] : null;
@@ -113,6 +119,7 @@ export default function Board() {
     function handleTileClick(position: Position3D) {
         if (!selectedPiece || !playerTurn) return;
         if (!possibleMoves.some((move) => move.x === position[0] && move.y === position[2])) return;
+
         const fromTile = getTileFromPiece(selectedPiece.id, gameState!.tiles);
 
         const toTile = getTile({ x: position[0], y: position[2] }, gameState!.tiles);
@@ -122,8 +129,17 @@ export default function Board() {
             from: fromTile ? fromTile.position : null,
             to: toTile.position,
         };
+        if (allowedDirections.length > 2)
+            updateAllowedDirections({ x: position[0], y: position[2] });
         makeMove(room, move);
     }
+
+    useEffect(() => {
+        if (gameState?.roundNumber) {
+            setAllowedDirections(initialDirections);
+        }
+    }, [gameState?.roundNumber]);
+
     console.log(gameState);
 
     function handlePieceClick(e: ThreeEvent<MouseEvent>, pieceId: string) {
@@ -149,8 +165,9 @@ export default function Board() {
         } else {
             // Piece is outside the board (in a pile)
             if (gameState!.roundNumber === 1) {
+                console.log('first round', playerColor, piece.color, piece.type);
                 // In the first round, can only select opponent's pieces
-                if (piece.color === playerColor) return;
+                if (piece.color === playerColor || piece.type !== 'flatstone') return;
             } else {
                 // After first round, can only select own pieces
                 if (piece.color !== playerColor) return;
@@ -170,21 +187,24 @@ export default function Board() {
     function isPieceAtTopFromPlayer(tile: Tile): boolean {
         const topPieceId = tile.pieces[tile.pieces.length - 1];
         const topPiece = getPiece(topPieceId, gameState!.pieces);
-        return  topPiece?.color === playerColor;
+        return topPiece?.color === playerColor;
     }
-    console.log(selectedPiece, gameState?.pieces);
 
     const possibleMoves: Position[] = selectedPiece
         ? calculateMoves(selectedPiece.id, gameState!.tiles, gameState!.pieces, allowedDirections)
         : [];
+    console.log(possibleMoves, allowedDirections);
 
     const calculateTileHeight = (x: number, y: number): number => {
         const tile = gameState!.tiles.find((t) => t.position.x === x && t.position.y === y);
         if (!tile || !tile.pieces.length) return 0;
         // take into consideration if piece is standing or not
         let height = 0;
-        if (tile.pieces.length === 1) {
+        if (tile.pieces.length > 0) {
             tile.pieces.forEach((pieceId) => {
+                //if piece is within stack, dont count it
+                if (gameState!.selectedStack.some((stackPiece) => stackPiece.id === pieceId))
+                    return;
                 const piece = getPiece(pieceId, gameState!.pieces);
                 if (piece) {
                     height += pieceHeights[piece.type];

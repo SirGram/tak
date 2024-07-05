@@ -11,8 +11,8 @@ export interface Message {
 interface SocketState {
     messages: Message[];
     setMessages: (messages: Message[]) => void;
-    room: string | undefined;
-    setRoom: (roomId: string) => void;
+    room: string | null;
+    setRoom: (roomId: string | null) => void;
     username: string | null;
     setUsername: (value: string | null) => void;
     opponentUsername: string | null;
@@ -27,7 +27,7 @@ interface SocketState {
 export const useSocketStore = create<SocketState>((set) => ({
     messages: [],
     setMessages: (messages) => set({ messages }),
-    room: undefined,
+    room: null,
     setRoom: (roomId) => set({ room: roomId }),
     username: null,
     setUsername: (value) => set({ username: value }),
