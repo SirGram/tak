@@ -5,10 +5,8 @@ export type TBoard = Tile[];
 export type BoardSize = 3 | 4 | 5 | 6;
 
 interface BoardSelections {
-    stack: Piece[];
-    setStack: (value: Piece[]) => void;
-    showRound: number;
-    setShowRound: (value: number) => void;
+    showMove: number;
+    setShowMove: (value: number) => void;
 }
 
 interface BoardSettings {
@@ -17,16 +15,12 @@ interface BoardSettings {
 }
 
 export const useClientStore = create<BoardSelections & BoardSettings>((set) => ({
-    stack: [],
-    setStack: (newStack) => set({ stack: newStack }),
-
     selectedColor: '#ff7b00',
     setSelectedColor: (color) => {
         set({ selectedColor: color });
     },
-
-    showRound: 0,
-    setShowRound: (value) => {
-        set({ showRound: value });
+    showMove: 0,
+    setShowMove: (value) => {
+        set({ showMove: value });
     },
 }));

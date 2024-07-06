@@ -1,4 +1,5 @@
-import { Piece, PieceColor, Position, TBoard, Tile } from '../../../common/types';
+import { Piece, PieceColor, Player, Position, TBoard, Tile } from '../../../common/types';
+import { pieceHeights } from './types';
 
 export function getTile(position: Position, tiles: TBoard): Tile | null {
     const tile =
@@ -39,7 +40,7 @@ export function isBoardFull(tiles: TBoard): boolean {
 }
 
 export function isBoardEmpty(tiles: TBoard): boolean {
-  return tiles.every((tile) => tile.pieces.length === 0);
+    return tiles.every((tile) => tile.pieces.length === 0);
 }
 
 export function calculateMoves(
@@ -94,3 +95,33 @@ export function getFlatstones(tiles: Tile[], color: PieceColor, pieces: Piece[])
     });
     return number;
 }
+
+export function isPieceAtTopFromPlayer(tile: Tile, pieces: Piece[], playerColor: Player): boolean {
+    const topPieceId = tile.pieces[tile.pieces.length - 1];
+    const topPiece = getPiece(topPieceId, pieces);
+    return topPiece?.color === playerColor;
+}
+
+export const calculateTileHeight = (
+    x: number,
+    y: number,
+    tiles: Tile[],
+    stack: Piece[],
+    pieces: Piece[]
+): number => {
+    const tile = tiles.find((t) => t.position.x === x && t.position.y === y);
+    if (!tile || !tile.pieces.length) return 0;
+    // take into consideration if piece is standing or not
+    let height = 0;
+    if (tile.pieces.length > 0) {
+        tile.pieces.forEach((pieceId) => {
+            //if piece is within stack, dont count it
+            if (stack.some((stackPiece) => stackPiece.id === pieceId)) return;
+            const piece = getPiece(pieceId, pieces);
+            if (piece) {
+                height += pieceHeights[piece.type];
+            }
+        });
+    }
+    return height;
+};

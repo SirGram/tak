@@ -42,7 +42,7 @@ export function Blackcapstone({ isSelected, opacity, ...props }: Props) {
                 geometry={nodes.Cylinder001.geometry}
                 material={material}
                 rotation={[0, -0.12, 0]}
-                position={[0.25, -0.9, 0.4]}
+                position={[0, -0.9, 0]}
                 scale={[1.647, 0.318, 1.647]}>
                 {isSelected && (
                     <meshStandardMaterial attach="material" color={selectedColor} transparent />

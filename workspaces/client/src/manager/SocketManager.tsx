@@ -70,6 +70,8 @@ export const SocketManager = () => {
             });
         });
 
+        
+
         return () => {
             socket.off('roomJoined');
             socket.off('roomFull');
@@ -104,4 +106,8 @@ export function makeMove(roomId: string, move: Move) {
 
 export function changePieceStand(roomId: string, pieceId: string) {
     socket.emit('changePieceStand', roomId, pieceId);
+}
+
+export function playAgain(roomId: string) {
+    socket.emit('playAgain', roomId);
 }

@@ -37,7 +37,7 @@ export function Whitestone({ isSelected, opacity, isStanding, ...props }: Props)
 
     const { rotation, position } = useSpring({
         rotation: isStanding ? [Math.PI / 2, 0, 0] : [0, 0, 0],
-        position: isStanding ? [0.2, 0.4, 0.3] : [0.2, -0.9, 0.3],
+        position: isStanding ? [0, 0.4, -0.3] : [0, -0.9, 0],
         config: { mass: 1, tension: 170, friction: 26 },
     });
 

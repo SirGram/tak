@@ -2,7 +2,14 @@ import { Fragment } from 'react/jsx-runtime';
 import { BoardModel } from '../models/BoardModel';
 import { Color, ThreeEvent } from '@react-three/fiber';
 import { useClientStore } from '../store/ClientStore';
-import { calculateMoves, getPiece, getTile, getTileFromPiece } from '../logic/board';
+import {
+    calculateMoves,
+    calculateTileHeight,
+    getPiece,
+    getTile,
+    getTileFromPiece,
+    isPieceAtTopFromPlayer,
+} from '../logic/board';
 import { Candle } from '../models/Candle';
 import Pieces from './Pieces';
 import { changePieceStand, makeMove, selectStack } from '../manager/SocketManager';
@@ -68,13 +75,11 @@ function BoardTable() {
 
 export default function Board() {
     const { room, playerColor, gameState } = useSocketStore();
-    const { showRound } = useClientStore();
+    const { showMove } = useClientStore();
 
     console.log(gameState);
 
     const playerTurn = playerColor === gameState?.currentPlayer && gameState?.gameStarted;
-
-    const [shownPieces, setShownPieces] = useState<Piece3D[]>([]);
 
     const initialDirections = [
         { x: 0, y: 1 },
@@ -108,7 +113,8 @@ export default function Board() {
         gameState && gameState.selectedStack.length > 0 ? gameState.selectedStack[0] : null;
 
     function handleTileClick(position: Position3D) {
-        if (!selectedPiece || !playerTurn) return;
+        if (isViewingHistory) return;
+        if (!selectedPiece || !playerTurn || gameState.gameOver) return;
         if (!possibleMoves.some((move) => move.x === position[0] && move.y === position[2])) return;
 
         const fromTile = getTileFromPiece(selectedPiece.id, gameState!.tiles);
@@ -134,7 +140,8 @@ export default function Board() {
     console.log(gameState);
 
     function handlePieceClick(e: ThreeEvent<MouseEvent>, pieceId: string) {
-        if (!playerTurn) return;
+        if (isViewingHistory) return;
+        if (!playerTurn || gameState.gameOver) return;
         e.stopPropagation();
         console.log('piece clicked');
         const piece = getPiece(pieceId, gameState!.pieces);
@@ -144,7 +151,7 @@ export default function Board() {
 
         if (tile) {
             // Piece is on the board
-            if (!isPieceAtTopFromPlayer(tile)) return;
+            if (!isPieceAtTopFromPlayer(tile, gameState!.pieces, playerColor)) return;
             const pieceIndex = tile.pieces.indexOf(pieceId);
             if (pieceIndex === -1) return;
             const selectedPieceIds = tile.pieces.slice(pieceIndex);
@@ -175,46 +182,25 @@ export default function Board() {
         }
     }
 
-    function isPieceAtTopFromPlayer(tile: Tile): boolean {
-        const topPieceId = tile.pieces[tile.pieces.length - 1];
-        const topPiece = getPiece(topPieceId, gameState!.pieces);
-        return topPiece?.color === playerColor;
-    }
-
     const possibleMoves: Position[] = selectedPiece
         ? calculateMoves(selectedPiece.id, gameState!.tiles, gameState!.pieces, allowedDirections)
         : [];
-    console.log(possibleMoves, allowedDirections);
 
-    const calculateTileHeight = (x: number, y: number): number => {
-        const tile = gameState!.tiles.find((t) => t.position.x === x && t.position.y === y);
-        if (!tile || !tile.pieces.length) return 0;
-        // take into consideration if piece is standing or not
-        let height = 0;
-        if (tile.pieces.length > 0) {
-            tile.pieces.forEach((pieceId) => {
-                //if piece is within stack, dont count it
-                if (gameState!.selectedStack.some((stackPiece) => stackPiece.id === pieceId))
-                    return;
-                const piece = getPiece(pieceId, gameState!.pieces);
-                if (piece) {
-                    height += pieceHeights[piece.type];
-                }
-            });
-        }
-        return height;
-    };
+    // if gameState is null, currentGameState will be null as well
+
+    const isViewingHistory = gameState && showMove < gameState.history.length -1;
+    const currentGameState = isViewingHistory ? gameState.history[showMove +1] : gameState;
 
     return (
         <>
             <BoardModel scale={0.244} position={[0, -0.23, 0]} />
             <BoardTable />
-            {gameState && (
+            {currentGameState && (
                 <>
                     <Pieces
                         onClick={handlePieceClick}
-                        pieces={gameState.pieces}
-                        board={gameState.tiles}
+                        pieces={currentGameState.pieces}
+                        board={currentGameState.tiles}
                     />
 
                     {/* Render board click tiles */}
@@ -224,7 +210,13 @@ export default function Board() {
                                 {Array.from(Array(5), (_, j) => (
                                     <Fragment key={j}>
                                         <TileModel
-                                            height={calculateTileHeight(i, j)}
+                                            height={calculateTileHeight(
+                                                i,
+                                                j,
+                                                gameState.tiles,
+                                                gameState.selectedStack,
+                                                gameState.pieces
+                                            )}
                                             position={[i, -0.3, j]}
                                             color={i % 2 === j % 2 ? '#4e1200' : '#7e000000'}
                                             onClick={handleTileClick}
@@ -252,10 +244,10 @@ export default function Board() {
                             </Fragment>
                         </Fragment>
                     ))}
-                    {Array.from(Array(5), (_, i) => (
+                    {Array.from(Array(2), (_, i) => (
                         <Fragment key={i}>
-                            <Candle position={[i, -0.35, -1.5]} scale={[1, 1, 1]} />
-                            <Candle position={[i, -0.35, 5.5]} scale={[1, 1, 1]} />
+                            <Candle position={[i * 3 + 0.5, -0.35, -1.5]} scale={[1, 1, 1]} />
+                            <Candle position={[i * 3 + 0.5, -0.35, 5.5]} scale={[1, 1, 1]} />
                         </Fragment>
                     ))}
                 </>

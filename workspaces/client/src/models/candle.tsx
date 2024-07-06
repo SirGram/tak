@@ -28,9 +28,9 @@ export function Candle(props: JSX.IntrinsicElements['group']) {
     return (
         <group {...props} dispose={null}>
             <group
-                position={[0.016, 0.001, 0.002]}
+                position={[0.016,-0.1, 0.002]}
                 rotation={[-Math.PI, 1.419, -Math.PI]}
-                scale={[0.424, 0.289, 0.424]}>
+                scale={[0.424, 0.3, 0.424]}>
                 <mesh
                     name="Circle003_1"
                     geometry={nodes.Circle003_1.geometry}

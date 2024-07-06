@@ -41,7 +41,7 @@ export function Whitecapstone({ isSelected, opacity, ...props }: Props) {
                 receiveShadow
                 geometry={nodes.Cube004.geometry}
                 material={material}
-                position={[0.1, -0.9, 0.55]}>
+                position={[-0.1, -0.9, 0.2]}>
                 {isSelected && <meshStandardMaterial attach="material" color={selectedColor} />}
             </mesh>
         </group>

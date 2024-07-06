@@ -190,6 +190,13 @@ const handleMakeMove = (roomId: string, move: Move) => {
   if (!room) return;
 
   const gameState = room.gameState;
+
+  // Save the current state to history before making the move
+  gameState.history.push({
+    tiles: JSON.parse(JSON.stringify(gameState.tiles)),
+    pieces: JSON.parse(JSON.stringify(gameState.pieces)),
+  });
+
   let updatedTiles = [...gameState.tiles];
 
   if (move.from === null) {
@@ -251,15 +258,14 @@ const handleMakeMove = (roomId: string, move: Move) => {
   // remove first piece from stack
   room.gameState.selectedStack.shift();
   // check game over
-  room.gameState = checkGameOver(gameState);
+  room.gameState = checkGameOver(room.gameState);
 
   // change turn if stack is empty
   if (room.gameState.selectedStack.length === 0) {
-    room.gameState = roundOver(gameState);
+    room.gameState = roundOver(room.gameState);
   }
 
   sendGameUpdate(roomId, room.gameState);
-  console.log(gameState);
 };
 
 const handleChangePieceStand = (roomId: string, pieceId: string) => {
@@ -294,8 +300,10 @@ const checkGameOver = (gameState: ServerGameState): ServerGameState => {
   );
   if (isWhiteRoad) {
     updatedGameState.winner = 'white';
+    updatedGameState.gameOver = true;
     return updatedGameState;
   }
+
   const isBlackRoad = checkRoadWin(
     updatedGameState.tiles,
     'black',
@@ -303,6 +311,7 @@ const checkGameOver = (gameState: ServerGameState): ServerGameState => {
   );
   if (isBlackRoad) {
     updatedGameState.winner = 'black';
+    updatedGameState.gameOver = true;
     return updatedGameState;
   }
 
@@ -312,7 +321,8 @@ const checkGameOver = (gameState: ServerGameState): ServerGameState => {
     updatedGameState.pieces,
     updatedGameState.tiles,
   );
-  console.log(boardFull, playerWithNoPieces);
+  console.log(playerWithNoPieces, boardFull);
+
   if (boardFull || playerWithNoPieces) {
     const whiteFlatstones = getFlatstones(
       updatedGameState.tiles,
@@ -333,7 +343,8 @@ const checkGameOver = (gameState: ServerGameState): ServerGameState => {
     } else {
       updatedGameState.winner = 'tie';
     }
-    console.log(boardFull, whiteFlatstones, blackFlatstones);
+
+    updatedGameState.gameOver = true;
   }
 
   return updatedGameState;

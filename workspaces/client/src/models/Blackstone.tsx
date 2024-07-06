@@ -38,8 +38,8 @@ export function Blackstone({ isSelected, opacity, isStanding, ...props }: Props)
     }, [materials, opacity]);
 
     const { rotation, position } = useSpring({
-        rotation: isStanding ? [-Math.PI / 2, -0.05, 0] : [0, -0.05, 0],
-        position: isStanding ? [0.2, 0.25, 0.3] : [0.2, -0.9, 0.3],
+        rotation: isStanding ? [-Math.PI / 2, -0.1, 0] : [0, -0.1, 0],
+        position: isStanding ? [0.2, 0.25, 0.3] : [0, -0.9, 0],
         config: { mass: 1, tension: 170, friction: 26 },
     });
 

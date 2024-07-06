@@ -9,14 +9,14 @@ import { useClientStore } from '../store/ClientStore';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 import { getFlatstones } from '../logic/board';
 import Messages from './GameUI/Messages';
-import { leaveRoom } from '../manager/SocketManager';
+import { leaveRoom, playAgain } from '../manager/SocketManager';
 import { Piece, Tile } from '../../../common/types';
 function GameInfo() {
-    const { gameState, room, playerColor } = useSocketStore();
+    const { gameState, room, playerColor, username, opponentUsername } = useSocketStore();
 
-    const { showRound } = useClientStore();
+    const { showMove } = useClientStore();
 
-    const { gameStarted, currentPlayer, roundNumber, winner } = gameState!;
+    const { gameStarted, currentPlayer, roundNumber, winner, gameOver } = gameState!;
 
     const whiteFlatstones = getFlatstones(gameState!.tiles, 'white', gameState!.pieces);
     const blackFlatstones = getFlatstones(gameState!.tiles, 'black', gameState!.pieces);
@@ -26,14 +26,26 @@ function GameInfo() {
     const [message, setMessage] = useState('');
 
     useEffect(() => {
-        if (gameStarted) {
+        if (gameStarted && !gameOver) {
             startStopWatch();
-        } else {
+        } else if (gameOver) {
+            console.log('game over');
             stopStopwatch();
         }
-    }, [gameStarted]);
+        console.log(gameState)
+    }, [gameState, gameStarted, gameOver]);
 
     useEffect(() => {
+        if (gameState?.gameOver) {
+            switch (gameState?.winner) {
+                case 'white':
+                    return setMessage('White player wins!');
+                case 'black':
+                    return setMessage('Black player wins!');
+                case 'tie':
+                    return setMessage("It's a tie!");
+            }
+        }
         if (!gameState?.gameStarted)
             return setMessage('Share your room with a friend to play with!');
 
@@ -73,6 +85,12 @@ function GameInfo() {
     const handleExitRoom = () => {
         if (room) {
             leaveRoom(room);
+        }
+    };
+
+    const handlePlayAgain = () => {
+        if (room) {
+            playAgain(room);
         }
     };
 
@@ -156,7 +174,7 @@ function GameInfo() {
                                     </div>
                                     <CollapsibleContent className=" flex flex-wrap items-center justify-center gap-2 mx-2">
                                         <span className="pl-2 pr-2 border-r border-l border-border flex items-center gap-1">
-                                            <span> Round:</span> <b>{showRound}</b>
+                                            <span> Round:</span> <b>{gameState?.roundNumber}</b>
                                         </span>
                                         <span className="pr-2 border-r border-border flex items-center gap-1">
                                             <span> Room: </span>
@@ -168,7 +186,7 @@ function GameInfo() {
                                         </span>
                                         <Button
                                             onClick={handleExitRoom}
-                                            variant={'default'}
+                                            variant={'destructive'}
                                             className="m-2">
                                             Exit Room
                                         </Button>
@@ -191,18 +209,23 @@ function GameInfo() {
                                     {message}
                                 </Card>
                             )}
+                            {gameState?.gameOver && (
+                                <Card className="w-fit mx-auto p-2 mt-2  flex justify-center">
+                                    <Button variant="default" onClick={handlePlayAgain}>Play again</Button>
+                                </Card>
+                            )}
                         </div>
                         <Card
                             className="w-fit flex gap-2 h-fit px-2 items-center "
                             title="Number of flatstones">
                             <Collapsible open={is2DBoardOpen} onOpenChange={setIs2DBoardOpen}>
                                 <div className="flex items-center justify-between gap-2 pl-4 h-10">
-                                    <span className="pr-2 h-full items-center flex gap-1 font-semibold">
+                                    <span className=" h-full items-center flex gap-1 font-semibold">
                                         {blackFlatstones}
                                         <div className="size-6 bg-orange-950  border-orange-900 border-foreground border-2  rounded-full"></div>
                                     </span>
 
-                                    <div className="py-1 w-[1px] h-6 bg-muted dark:bg-gray-600 "></div>
+                                    <div className="py-1 w-[1px] mx-2 h-6 bg-muted dark:bg-gray-600 "></div>
                                     <span className=" h-full items-center flex  gap-1 font-semibold">
                                         <div className="size-6 bg-brown  border-yellow-300 border-2 bg-yellow-100 rounded-sm "></div>
                                         {whiteFlatstones}
