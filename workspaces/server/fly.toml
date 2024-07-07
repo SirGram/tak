@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for tak on 2024-06-22T02:30:18+02:00
+# fly.toml app configuration file generated for tak-cold-bird-3352 on 2024-07-07T18:39:47+02:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'tak'
+app = 'tak-cold-bird-3352'
 primary_region = 'mad'
 
 [build]
@@ -18,14 +18,12 @@ primary_region = 'mad'
   processes = ['app']
 
 [[services]]
-  http_checks = []
   protocol = ''
-  internal_port = 0  
+  internal_port = 0
 
   [[services.ports]]
     port = 80
     handlers = ['http']
-
 
   [services.concurrency]
     hard_limit = 25
@@ -39,5 +37,3 @@ primary_region = 'mad'
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
-
-

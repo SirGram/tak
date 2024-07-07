@@ -14,9 +14,8 @@ import { Candle } from '../models/Candle';
 import Pieces from './Pieces';
 import { changePieceStand, makeMove, selectStack } from '../manager/SocketManager';
 import { useSocketStore } from '../store/SocketStore';
-import { Move, Piece, Position, Position3D, Tile } from '../../../common/types';
+import { Move, Piece, Position, Position3D } from '../../../common/types';
 import { useEffect, useState } from 'react';
-import { Piece3D, pieceHeights } from '../logic/types';
 
 interface TileProps {
     position: [x: number, y: number, z: number];

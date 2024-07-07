@@ -7,51 +7,68 @@ import { useClientStore } from '../../store/ClientStore';
 import { useToast } from '../ui/use-toast';
 
 export default function History() {
-    const { gameState } = useSocketStore();
-    const { history } = gameState!;
+    const { gameState, playerColor } = useSocketStore();
+    const { showMove, setShowMove } = useClientStore();
+    console.log(gameState?.history.length);
+    console.log(showMove);
     const { toast } = useToast();
-    const { showRound, setShowRound, stack } = useClientStore();
+
+    const playerTurn = playerColor === gameState?.currentPlayer && gameState?.gameStarted;
 
     useEffect(() => {
-        if (showRound === history.length - 2) {
-            setShowRound(history.length - 1);
-        } else if (showRound > 0) {
+        if (!gameState) return;
+
+        const historyLength = gameState.history.length;
+        console.log('History length:', historyLength);
+        console.log('Current showMove:', showMove);
+
+        setShowMove(historyLength - 1);
+
+        /*  if (historyLength > 0 && showMove === historyLength - 1) {
+            // We're at the latest move, update to new latest
+        } else if (historyLength > showMove + 1) {
+            // New move(s) added while we're viewing history
             toast({
-                title: 'Opponent made a move',
-                description: 'Update history to show opponent move',
+                title: 'New move made',
+                description: 'Use the history controls to view the latest move',
                 variant: 'default',
             });
-        }
-    }, [history]);
+        } */
+    }, [gameState?.history]);
 
-    const disableAll = stack.length > 0;
+    const disableAll =
+        (playerTurn && gameState.selectedStack.length > 0) ||
+        (gameState && gameState.history.length < 2) ||
+        false;
+    const disablePrevious = showMove <= 0;
+    const disableNext = gameState && showMove > gameState.history.length - 2;
+    /* 
+    const disableLast = showMove === history.length - 1 || history.length === 0; */
 
-    const disableFirst = showRound === 0;
-    const disablePrevious = showRound <= 0;
-    const disableNext = showRound >= history.length - 1;
-    const disableLast = showRound === history.length - 1 || history.length === 0;
+    const disableLast = false;
 
     const previousBoard = () => {
-        if (showRound > 0) {
-            setShowRound(showRound - 1);
+        if (showMove > 0) {
+            setShowMove(showMove - 1);
         }
     };
 
     const nextBoard = () => {
-        if (showRound < history.length - 1) {
-            setShowRound(showRound + 1);
+        if (!gameState) return;
+        if (showMove <= gameState.history.length - 1) {
+            setShowMove(showMove + 1);
         }
     };
 
     const firstBoard = () => {
-        if (!disableFirst) {
-            setShowRound(0);
+        if (!disablePrevious) {
+            setShowMove(0);
         }
     };
 
     const lastBoard = () => {
-        if (!disableLast) {
-            setShowRound(history.length - 1);
+        if (!disableLast && gameState) {
+            setShowMove(gameState.history.length - 1);
         }
     };
 
@@ -59,10 +76,10 @@ export default function History() {
         <Card className="fixed bottom-0 right-0 m-3 w-fit h-[2.75rem] z-20 overflow-hidden bg-transparent">
             <div className="flex justify-center h-full">
                 <Button
-                    className={`rounded-none h-full text-background dark:text-foreground ${disableFirst ? 'pointer-events-none opacity-50' : ''}`}
+                    className={`rounded-none h-full text-background dark:text-foreground ${disablePrevious ? 'pointer-events-none opacity-50' : ''}`}
                     variant={'ghost'}
                     onClick={firstBoard}
-                    disabled={disableFirst || disableAll}>
+                    disabled={disablePrevious || disableAll}>
                     <ArrowLeftFromLine />
                 </Button>
                 <Separator />
@@ -87,7 +104,7 @@ export default function History() {
                     className={`rounded-none h-full text-background dark:text-foreground ${disableLast ? 'pointer-events-none opacity-50' : ''}`}
                     variant={'ghost'}
                     onClick={lastBoard}
-                    disabled={disableLast || disableAll}>
+                    disabled={disableNext || disableAll}>
                     <ArrowRightFromLine />
                 </Button>
             </div>

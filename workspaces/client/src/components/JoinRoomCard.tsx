@@ -1,12 +1,35 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { joinRoom } from '../manager/SocketManager';
 import { Card } from './ui/card';
+import { useNavigate, useParams } from 'react-router-dom';
+import { join } from 'path';
 
 export default function JoinRoomCard() {
     const [roomId, setRoomId] = useState('');
     const [username, setUsername] = useState('');
+
+    const navigate = useNavigate();
+
+    const { roomId: urlRoomId } = useParams<{ roomId?: string }>();
+
+
+    console.log(urlRoomId);
+    useEffect(() => {
+        if (urlRoomId) {
+            const promptedUsername = prompt('Please introduce your username to join room ' + urlRoomId);
+            if (promptedUsername) {
+                setUsername(promptedUsername);
+                joinRoom(urlRoomId, promptedUsername);
+                navigate(`/${urlRoomId}`, { replace: true });
+            } else {
+                // If the user cancels the prompt or enters an empty string
+                alert('Username is required to join the room.');
+                navigate('/', { replace: true }); // Redirect to home if no username is provided
+            }
+        }
+    }, [urlRoomId]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -22,6 +45,7 @@ export default function JoinRoomCard() {
         }
 
         joinRoom(roomId, username);
+        navigate(`/${roomId}`, { replace: true });
     };
 
     return (

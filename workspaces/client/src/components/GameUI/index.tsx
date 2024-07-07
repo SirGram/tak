@@ -1,5 +1,4 @@
 import GameInfo from "./GameInfo";
-
 import History from "./History";
 import Messages from "./Messages";
 

@@ -3,17 +3,19 @@ import Scene from './components/Scene';
 import { SocketManager } from './manager/SocketManager';
 import { useSocketStore } from './store/SocketStore';
 import ThemeButton from './components/ThemeButton';
-import GameUI from './components/GameUI';
 import JoinRoomCard from './components/JoinRoomCard';
 import { Toaster } from './components/ui/toaster';
 import { SoundManager } from './manager/SoundManager';
 import AudioButton from './components/AudioButton';
+import GameUI from './components/GameUI';
 
 function App() {
     SocketManager();
     SoundManager();
 
     const { gameState } = useSocketStore();
+
+    
 
     function handleCanvasClick() {}
 
