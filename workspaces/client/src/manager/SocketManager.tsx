@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { Message, useSocketStore } from '../store/SocketStore';
 import { useToast } from '../components/ui/use-toast';
-import { Move, Piece, Player, ServerGameState } from '../../../common/types';
+import { GameMode, Move, Piece, Player, ServerGameState } from '../../../common/types';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 
@@ -27,7 +27,7 @@ export const SocketManager = () => {
     useEffect(() => {
         socket.on(
             'roomJoined',
-            (joinedRoomId: string, username: string, color: Player, gameState: ServerGameState) => {
+            (joinedRoomId: string, username: string, color: Player, gameState: ServerGameState, ) => {
                 sendMessage(joinedRoomId, `${username} joined the room`, `System`);
                 setRoom(joinedRoomId);
                 setUsername(username);
@@ -82,8 +82,8 @@ export const SocketManager = () => {
     }, [setMessages, setRoom, playerColor, setPlayerColor]);
 };
 
-export function joinRoom(roomId: string, username: string) {
-    socket.emit('joinRoom', roomId, username);
+export function joinRoom(roomId: string, username: string, mode: GameMode) {
+    socket.emit('joinRoom', roomId, username, mode);
 }
 
 export function leaveRoom(roomId: string) {

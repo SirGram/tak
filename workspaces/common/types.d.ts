@@ -28,6 +28,8 @@ export type Move = {
   to: Position;
 }
 
+export type GameMode = "local" | "multiplayer";
+
 export type ServerGameState = {
   gameStarted: boolean;
   gameOver: boolean;

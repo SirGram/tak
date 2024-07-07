@@ -1,5 +1,12 @@
 import { Server, Socket } from 'socket.io';
-import { Move, Piece, ServerGameState, TBoard, Tile } from '../../common/types';
+import {
+  GameMode,
+  Move,
+  Piece,
+  ServerGameState,
+  TBoard,
+  Tile,
+} from '../../common/types';
 import { initialGameState } from './state/state';
 import express from 'express';
 
@@ -36,14 +43,15 @@ interface Room {
   players: { id: string; username: string; color: 'white' | 'black' }[];
   gameState: ServerGameState;
   messages: { username: string; content: string }[];
+  mode: GameMode;
 }
 const rooms: Record<string, Room> = {};
 
 io.on('connection', (socket) => {
   console.log('user connected');
 
-  socket.on('joinRoom', (roomId, username) => {
-    handleJoinRoom(socket, roomId, username);
+  socket.on('joinRoom', (roomId, username, mode) => {
+    handleJoinRoom(socket, roomId, username, mode);
   });
 
   socket.on('leaveRoom', (roomId) => {
@@ -68,48 +76,71 @@ io.on('connection', (socket) => {
   });
 });
 
-const handleJoinRoom = (socket: any, roomId: string, username: string) => {
-  // Create or join room
+const handleJoinRoom = (
+  socket: any,
+  roomId: string,
+  username: string,
+  mode: GameMode,
+) => {
+  // Create room if it doesn't exist
   if (!rooms[roomId]) {
     rooms[roomId] = {
       id: roomId,
       players: [],
       gameState: JSON.parse(JSON.stringify(initialGameState)), // deep copy
       messages: [],
+      mode: mode, // Add mode to the room object
     };
-
-    console.log(`Created room ${roomId}`);
+    console.log(`Created room ${roomId} with mode ${mode}`);
   }
 
-  // Check room space
-  // Determine player color based on number of players
-  const playerColor = rooms[roomId].players.length === 1 ? 'white' : 'black';
-  if (rooms[roomId].players.length < 2) {
-    rooms[roomId].players.push({
-      id: socket.id,
-      username: username,
-      color: playerColor,
-    });
-    socket.join(roomId);
+  const room = rooms[roomId];
 
-    socket.join(roomId);
-    socket.emit(
-      'roomJoined',
-      roomId,
-      username,
-      playerColor,
-      rooms[roomId].gameState,
-    );
-    console.log(`User ${username} joined room ${roomId} as ${playerColor}`);
+  // Check if the joining player's mode matches the room's mode
+  if (room.mode !== mode) {
+    socket.emit(`modeError', 'Your game mode does not match the room's mode.`);
+    return;
+  }
 
-    if (rooms[roomId].players.length === 2) {
-      rooms[roomId].gameState.gameStarted = true;
+  // Handle joining based on mode
+  if (mode === 'local') {
+    if (room.players.length === 0) {
+      addPlayerToRoom(socket, room, username, 'white');
+      room.gameState.gameStarted = true;
+    } else {
+      socket.emit('roomFull', roomId);
+      return;
     }
-    console.log(rooms[roomId].players);
-    sendGameUpdate(roomId, rooms[roomId].gameState);
-  } else {
-    socket.emit('roomFull', roomId);
+  } else if (mode === 'multiplayer') {
+    if (room.players.length < 2) {
+      const playerColor = room.players.length === 0 ? 'white' : 'black';
+      addPlayerToRoom(socket, room, username, playerColor);
+      if (room.players.length === 2) {
+        room.gameState.gameStarted = true;
+      }
+    } else {
+      socket.emit('roomFull', roomId);
+      return;
+    }
   }
+
+  sendGameUpdate(roomId, room.gameState);
+};
+
+const addPlayerToRoom = (
+  socket: any,
+  room: Room,
+  username: string,
+  color: 'white' | 'black',
+) => {
+  room.players.push({
+    id: socket.id,
+    username: username,
+    color: color,
+  });
+  socket.join(room.id);
+  socket.emit('roomJoined', room.id, username, color, room.gameState);
+  console.log(`User ${username} joined room ${room.id} as ${color}`);
 };
 
 const handleLeaveRoom = (socket: any, roomId: string) => {

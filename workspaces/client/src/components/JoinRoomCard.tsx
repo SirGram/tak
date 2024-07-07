@@ -4,37 +4,40 @@ import { Input } from './ui/input';
 import { joinRoom } from '../manager/SocketManager';
 import { Card } from './ui/card';
 import { useNavigate, useParams } from 'react-router-dom';
-import { join } from 'path';
+import { useClientStore } from '../store/ClientStore';
+import { Switch } from './ui/switch';
 
 export default function JoinRoomCard() {
     const [roomId, setRoomId] = useState('');
     const [username, setUsername] = useState('');
+    const [hasJoined, setHasJoined] = useState(false);
 
     const navigate = useNavigate();
 
     const { roomId: urlRoomId } = useParams<{ roomId?: string }>();
 
+    const { mode, setMode } = useClientStore();
 
-    console.log(urlRoomId);
     useEffect(() => {
-        if (urlRoomId) {
-            const promptedUsername = prompt('Please introduce your username to join room ' + urlRoomId);
+        if (urlRoomId && !hasJoined) {
+            const promptedUsername = prompt(
+                'Please introduce your username to join room ' + urlRoomId
+            );
             if (promptedUsername) {
                 setUsername(promptedUsername);
-                joinRoom(urlRoomId, promptedUsername);
+                joinRoom(urlRoomId, promptedUsername, mode);
+                setHasJoined(true);
                 navigate(`/${urlRoomId}`, { replace: true });
             } else {
-                // If the user cancels the prompt or enters an empty string
                 alert('Username is required to join the room.');
-                navigate('/', { replace: true }); // Redirect to home if no username is provided
+                navigate('/', { replace: true });
             }
         }
-    }, [urlRoomId]);
+    }, [urlRoomId, hasJoined]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        // Validate room ID length
         if (!username) {
             alert('Username is required');
             return;
@@ -44,7 +47,8 @@ export default function JoinRoomCard() {
             return;
         }
 
-        joinRoom(roomId, username);
+        joinRoom(roomId, username, mode);
+        setHasJoined(true);
         navigate(`/${roomId}`, { replace: true });
     };
 
@@ -81,6 +85,15 @@ export default function JoinRoomCard() {
                     className="mt-2 text-xl h-full flex-1 w-full ">
                     Play
                 </Button>
+                <div className="flex items-center space-x-2 pt-4">
+                    <label htmlFor="game-mode">Localplayer</label>
+                    <Switch
+                        id="game-mode"
+                        checked={mode === 'multiplayer'}
+                        onCheckedChange={() => setMode(mode === 'local' ? 'multiplayer' : 'local')}
+                    />
+                    <label htmlFor="game-mode">Multiplayer</label>
+                </div>
             </form>
         </Card>
     );

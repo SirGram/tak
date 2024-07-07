@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+
 import {
   BoardSize,
   Piece,
@@ -108,40 +108,6 @@ export function getTile(position: Position | null, tiles: TBoard): Tile | null {
   return tile ? tile : null;
 }
 
-/* 
-
-function checkGameOver() {
-    const playerColor = currentPlayer;
-    const enemyColor = currentPlayer === 'white' ? 'black' : 'white';
-
-    const whiteFlatstones = getFlatstones(tiles, 'white', pieces);
-    const blackFlatstones = getFlatstones(tiles, 'black', pieces);
-    setFlatstones({ white: whiteFlatstones, black: blackFlatstones });
-
-   
-} 
-
-export function isAnyPlayerWithoutPieces(pieces: Piece3D[]): boolean {
-    let whiteHasPieces = false;
-    let blackHasPieces = false;
-
-    for (const piece of pieces) {
-        if (piece.selectable) {
-            if (piece.color === 'white') {
-                whiteHasPieces = true;
-            } else if (piece.color === 'black') {
-                blackHasPieces = true;
-            }
-        }
-        if (whiteHasPieces && blackHasPieces) {
-            break; // No need to continue checking
-        }
-    }
-
-    return !whiteHasPieces || !blackHasPieces;
-}
-    
-*/
 export const checkRoadWin = (
   tiles: TBoard,
   color: PieceColor,

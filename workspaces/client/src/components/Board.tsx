@@ -74,11 +74,12 @@ function BoardTable() {
 
 export default function Board() {
     const { room, playerColor, gameState } = useSocketStore();
-    const { showMove } = useClientStore();
+    const { showMove , mode } = useClientStore();
 
     console.log(gameState);
 
-    const playerTurn = playerColor === gameState?.currentPlayer && gameState?.gameStarted;
+    let playerTurn = playerColor === gameState?.currentPlayer && gameState?.gameStarted;
+    if (mode === 'local') playerTurn = true
 
     const initialDirections = [
         { x: 0, y: 1 },
@@ -113,7 +114,7 @@ export default function Board() {
 
     function handleTileClick(position: Position3D) {
         if (isViewingHistory) return;
-        if (!selectedPiece || !playerTurn || gameState.gameOver) return;
+        if (!selectedPiece || !playerTurn || gameState!.gameOver) return;
         if (!possibleMoves.some((move) => move.x === position[0] && move.y === position[2])) return;
 
         const fromTile = getTileFromPiece(selectedPiece.id, gameState!.tiles);
@@ -138,9 +139,11 @@ export default function Board() {
 
     console.log(gameState);
 
+    const playerThatPlays = mode === 'multiplayer' ? playerColor : gameState?.currentPlayer;
+
     function handlePieceClick(e: ThreeEvent<MouseEvent>, pieceId: string) {
         if (isViewingHistory) return;
-        if (!playerTurn || gameState.gameOver) return;
+        if (!playerTurn || gameState!.gameOver) return;
         e.stopPropagation();
         console.log('piece clicked');
         const piece = getPiece(pieceId, gameState!.pieces);
@@ -150,7 +153,7 @@ export default function Board() {
 
         if (tile) {
             // Piece is on the board
-            if (!isPieceAtTopFromPlayer(tile, gameState!.pieces, playerColor)) return;
+            if (!isPieceAtTopFromPlayer(tile, gameState!.pieces, playerThatPlays)) return;
             const pieceIndex = tile.pieces.indexOf(pieceId);
             if (pieceIndex === -1) return;
             const selectedPieceIds = tile.pieces.slice(pieceIndex);
@@ -162,12 +165,12 @@ export default function Board() {
         } else {
             // Piece is outside the board (in a pile)
             if (gameState!.roundNumber === 1) {
-                console.log('first round', playerColor, piece.color, piece.type);
+                console.log('first round', playerThatPlays, piece.color, piece.type);
                 // In the first round, can only select opponent's pieces
-                if (piece.color === playerColor || piece.type !== 'flatstone') return;
+                if (piece.color === playerThatPlays || piece.type !== 'flatstone') return;
             } else {
                 // After first round, can only select own pieces
-                if (piece.color !== playerColor) return;
+                if (piece.color !== playerThatPlays) return;
             }
 
             if (piece && room && piece.id === selectedPiece?.id) {
@@ -203,7 +206,7 @@ export default function Board() {
                     />
 
                     {/* Render board click tiles */}
-                    {playerTurn &&
+                    {playerTurn && gameState &&
                         Array.from(Array(5), (_, i) => (
                             <Fragment key={i}>
                                 {Array.from(Array(5), (_, j) => (

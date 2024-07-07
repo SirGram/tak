@@ -8,6 +8,7 @@ import { leaveRoom, playAgain } from "../../manager/SocketManager";
 import { useSocketStore } from "../../store/SocketStore";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
+import { useNavigate } from "react-router-dom";
 
 export default function GameInfo() {
     const { gameState, room, playerColor} = useSocketStore();
@@ -79,9 +80,11 @@ export default function GameInfo() {
             return `${formattedMinutes}:${formattedSeconds}`;
         }
     }
+    const navigate = useNavigate();
     const handleExitRoom = () => {
         if (room) {
             leaveRoom(room);
+            navigate('/')
         }
     };
 
@@ -203,9 +206,11 @@ export default function GameInfo() {
                             </Card>
 
                             {message && (
-                                <Card className="w-fit mx-auto px-2 py-1 mt-2  flex justify-center items-center gap-4">
+                                <Card className="w-fit mx-auto px-2 py-2 mt-2  flex justify-center items-center gap-4">
                                     {message}
-                                    <Button variant="default" onClick={handlePlayAgain}>Play again</Button>
+                                    {winner && (
+                                        <Button variant="default" onClick={handlePlayAgain}>Play again</Button>
+                                    )}
                                 </Card>
                             )}
                            

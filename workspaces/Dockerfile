@@ -8,18 +8,17 @@ RUN npm install -g typescript
 WORKDIR /app
 
 # Copy package.json and package-lock.json to the working directory
-COPY ./package.json .
-COPY ./package*.json ./
+COPY ./server/package.json .
+COPY ./server/package*.json ./
 # Install dependencies
 RUN npm install 
 
 
 # Copy the common directory into the container
-COPY ../common ./common
+COPY ./common /common
 
 # Copy the rest of the application code to the working directory
-COPY . .
-
+COPY ./server .
 
 
 # Expose port 3000 to the outside world

@@ -1,13 +1,12 @@
-# fly.toml app configuration file generated for tak-client on 2024-06-22T01:05:42+02:00
+# fly.toml app configuration file generated for tak on 2024-07-07T19:56:01+02:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'tak-client'
+app = 'tak'
 primary_region = 'mad'
 
 [build]
-  dockerfile = "Dockerfile"
 
 [http_service]
   internal_port = 8080
