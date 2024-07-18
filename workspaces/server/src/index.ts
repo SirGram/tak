@@ -3,6 +3,7 @@ import {
   GameMode,
   Move,
   Piece,
+  PieceColor,
   ServerGameState,
   TBoard,
   Tile,
@@ -44,6 +45,7 @@ interface Room {
   gameState: ServerGameState;
   messages: { username: string; content: string }[];
   mode: GameMode;
+  playAgainVotes: Set<string>;
 }
 const rooms: Record<string, Room> = {};
 
@@ -71,8 +73,11 @@ io.on('connection', (socket) => {
   socket.on('makeMove', (room, move) => {
     handleMakeMove(room, move);
   });
-  socket.on('changePieceStand', (roomId, pieceId, stand) => {
+  socket.on('changePieceStand', (roomId, pieceId) => {
     handleChangePieceStand(roomId, pieceId);
+  });
+  socket.on('playAgain', (roomId, username) => {
+    handlePlayAgain(roomId, username);
   });
 });
 
@@ -89,7 +94,8 @@ const handleJoinRoom = (
       players: [],
       gameState: JSON.parse(JSON.stringify(initialGameState)), // deep copy
       messages: [],
-      mode: mode, // Add mode to the room object
+      mode: mode,
+      playAgainVotes: new Set(),
     };
     console.log(`Created room ${roomId} with mode ${mode}`);
   }
@@ -323,25 +329,30 @@ const handleChangePieceStand = (roomId: string, pieceId: string) => {
 const checkGameOver = (gameState: ServerGameState): ServerGameState => {
   const updatedGameState = { ...gameState };
 
-  // Check roads
-  const isWhiteRoad = checkRoadWin(
+  // Check roads for both players
+  const currentPlayerRoad = checkRoadWin(
     updatedGameState.tiles,
-    'white',
+    updatedGameState.currentPlayer as PieceColor,
     updatedGameState.pieces,
   );
-  if (isWhiteRoad) {
-    updatedGameState.winner = 'white';
+  const otherPlayer =
+    updatedGameState.currentPlayer === 'white' ? 'black' : 'white';
+  const otherPlayerRoad = checkRoadWin(
+    updatedGameState.tiles,
+    otherPlayer,
+    updatedGameState.pieces,
+  );
+
+  // If the current player has a road, they win regardless of the other player's road
+  if (currentPlayerRoad) {
+    updatedGameState.winner = updatedGameState.currentPlayer;
     updatedGameState.gameOver = true;
     return updatedGameState;
   }
 
-  const isBlackRoad = checkRoadWin(
-    updatedGameState.tiles,
-    'black',
-    updatedGameState.pieces,
-  );
-  if (isBlackRoad) {
-    updatedGameState.winner = 'black';
+  // If only the other player has a road, they win
+  if (otherPlayerRoad) {
+    updatedGameState.winner = otherPlayer;
     updatedGameState.gameOver = true;
     return updatedGameState;
   }
@@ -352,7 +363,6 @@ const checkGameOver = (gameState: ServerGameState): ServerGameState => {
     updatedGameState.pieces,
     updatedGameState.tiles,
   );
-  console.log(playerWithNoPieces, boardFull);
 
   if (boardFull || playerWithNoPieces) {
     const whiteFlatstones = getFlatstones(
@@ -396,4 +406,43 @@ const roundOver = (gameState: ServerGameState) => {
 };
 const sendGameUpdate = (roomId: string, gameState: ServerGameState) => {
   io.to(roomId).emit('gameUpdated', gameState);
+};
+
+const resetGame = (room: Room) => {
+  room.gameState = JSON.parse(JSON.stringify(initialGameState));
+  room.gameState.gameStarted = true;
+  room.playAgainVotes.clear();
+  console.log(`reset single player game ${room.id}`);
+};
+
+const handlePlayAgain = (roomId: string, username: string) => {
+  const room = rooms[roomId];
+  if (!room) return;
+
+  if (room.mode === 'local') {
+    resetGame(room);
+    sendGameUpdate(roomId, room.gameState);
+  } else if (room.mode === 'multiplayer') {
+    // Find the player object
+    const player = room.players.find((p) => p.username === username);
+    if (!player) return;
+
+    // If the player hasn't voted yet
+    if (!room.playAgainVotes.has(player.id)) {
+      room.playAgainVotes.add(player.id);
+
+      // If all players have voted
+      if (room.playAgainVotes.size === room.players.length) {
+        resetGame(room);
+        sendGameUpdate(roomId, room.gameState);
+        console.log(`Reset multiplayer game ${roomId}`);
+      } else {
+        // Not all players have voted yet
+        io.to(roomId).emit('playAgainVote', {
+          usernameVote: username,
+          votesNeeded: room.players.length - room.playAgainVotes.size,
+        });
+      }
+    }
+  }
 };

@@ -9,9 +9,11 @@ import { useSocketStore } from "../../store/SocketStore";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { useNavigate } from "react-router-dom";
+import { useClientStore } from "../../store/ClientStore";
 
 export default function GameInfo() {
-    const { gameState, room, playerColor} = useSocketStore();
+    const { gameState, room, playerColor, username } = useSocketStore();
+    const { mode} = useClientStore();
 
 
     const { gameStarted, currentPlayer, roundNumber, winner, gameOver } = gameState!;
@@ -47,9 +49,9 @@ export default function GameInfo() {
         if (!gameState?.gameStarted)
             return setMessage('Share your room with a friend to play with!');
 
-        if (currentPlayer != playerColor) return setMessage('Waiting for your opponent move');
+        if ((currentPlayer != playerColor) && mode == 'multiplayer') return setMessage('Waiting for your opponent move');
 
-        if (roundNumber == 1) {
+        if (roundNumber == 1 ) {
             setMessage('Select opponent starting flatstone');
         } else if (winner) {
             if (winner == 'tie') {
@@ -89,8 +91,8 @@ export default function GameInfo() {
     };
 
     const handlePlayAgain = () => {
-        if (room) {
-            playAgain(room);
+        if (room && username) {
+            playAgain(room, username);
         }
     };
 

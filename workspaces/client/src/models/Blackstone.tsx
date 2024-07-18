@@ -28,7 +28,8 @@ type Props = GroupProps & {
 export function Blackstone({ isSelected, opacity, isStanding, ...props }: Props) {
     const { nodes, materials } = useGLTF('/blackstone.glb') as GLTFResult;
 
-    const { selectedColor } = useClientStore();
+    const { getSelectedColor } = useClientStore();
+    const selectedColor = getSelectedColor();
 
     const material = useMemo(() => {
         const newMaterial = materials['Material.018'];

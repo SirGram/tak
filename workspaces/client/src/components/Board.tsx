@@ -16,6 +16,7 @@ import { changePieceStand, makeMove, selectStack } from '../manager/SocketManage
 import { useSocketStore } from '../store/SocketStore';
 import { Move, Piece, Position, Position3D } from '../../../common/types';
 import { useEffect, useState } from 'react';
+import { useSettingsStore } from '../store/SettingsStore';
 
 interface TileProps {
     position: [x: number, y: number, z: number];
@@ -32,6 +33,10 @@ function TileModel({ position, color, onClick, isMovePossible, height }: TilePro
         e.stopPropagation();
         onClick(originalPosition);
     };
+    
+    const {getSelectedColor} = useClientStore();
+    const selectedColor = getSelectedColor();
+
     return (
         <group position={position} castShadow={false} receiveShadow={false} renderOrder={1}>
             {/* Box for the clickable area */}
@@ -45,8 +50,8 @@ function TileModel({ position, color, onClick, isMovePossible, height }: TilePro
             <mesh position={[0, height + 0.1, 0]} onClick={onClickHandler}>
                 <cylinderGeometry args={[0.2, 0.2, 0.05, 8]} />
                 <meshStandardMaterial
-                    color={isMovePossible ? '#000000' : '#ff0000'}
-                    opacity={isMovePossible ? 0.5 : 0}
+                    color={isMovePossible ? selectedColor : '#ff0000'}
+                    opacity={isMovePossible ? 0.9 : 0}
                     transparent={true}
                 />
             </mesh>
@@ -55,11 +60,12 @@ function TileModel({ position, color, onClick, isMovePossible, height }: TilePro
 }
 
 function BoardTable() {
+    const {lightTheme} = useSettingsStore();
     return (
         <mesh position={[2, -0.4, 2]} receiveShadow>
             <boxGeometry args={[10, 0.1, 10]} />
             <meshPhysicalMaterial
-                color={'#ced0d1'}
+                color={lightTheme ? '#ced0d1' : '#872609'}
                 opacity={0.5}
                 transparent={true}
                 roughness={0.1}

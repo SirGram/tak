@@ -1,8 +1,6 @@
 import create from 'zustand';
-import { GameMode, Piece, Position, Tile } from '../../../common/types';
-
-export type TBoard = Tile[];
-export type BoardSize = 3 | 4 | 5 | 6;
+import { GameMode } from '../../../common/types';
+import { useSettingsStore } from './SettingsStore';
 
 interface BoardSelections {
     showMove: number;
@@ -10,20 +8,19 @@ interface BoardSelections {
 }
 
 interface BoardSettings {
-    selectedColor: string;
-    setSelectedColor: (color: string) => void;
+    getSelectedColor: () => string;
     mode: GameMode;
     setMode: (mode: GameMode) => void;
 }
 
-export const useClientStore = create<BoardSelections & BoardSettings>((set) => ({
-    selectedColor: '#ff7b00',
-    setSelectedColor: (color) => {
-        set({ selectedColor: color });
-    },
+export const useClientStore = create<BoardSelections & BoardSettings>((set, get) => ({
     showMove: 0,
     setShowMove: (value) => {
         set({ showMove: value });
+    },
+    getSelectedColor: () => {
+        const { lightTheme } = useSettingsStore.getState();
+        return lightTheme ? '#ca8300ff' : '#ffe873'; // Example colors for light and dark themes
     },
     mode: 'multiplayer',
     setMode: (value) => {

@@ -33,7 +33,8 @@ export function Blackcapstone({ isSelected, opacity, ...props }: Props) {
         return newMaterial;
     }, [materials, opacity]);
 
-    const { selectedColor } = useClientStore();
+    const { getSelectedColor } = useClientStore();
+    const selectedColor = getSelectedColor();
     return (
         <group {...props} dispose={null}>
             <mesh

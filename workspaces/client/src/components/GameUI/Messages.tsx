@@ -47,7 +47,7 @@ export default function Messages() {
             <form className="w-full h-10 flex gap-1" onSubmit={handleSubmit}>
                 <Input
                     type="text"
-                    className="h-full opacity-50 focus-within:opacity-100 rounded-r-none"
+                    className="h-full opacity-50 focus-within:opacity-100 rounded-r-none dark:border-gray-600"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="GG"

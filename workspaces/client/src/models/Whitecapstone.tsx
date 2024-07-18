@@ -26,7 +26,8 @@ type Props = GroupProps & {
 export function Whitecapstone({ isSelected, opacity, ...props }: Props) {
     const { nodes, materials } = useGLTF('/whitecapstone.glb') as GLTFResult;
 
-    const { selectedColor } = useClientStore();
+    const { getSelectedColor } = useClientStore();
+    const selectedColor = getSelectedColor();
     
     const material = useMemo(() => {
         const newMaterial = materials.Material;

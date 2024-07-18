@@ -26,7 +26,9 @@ type Props = GroupProps & {
 };
 export function Whitestone({ isSelected, opacity, isStanding, ...props }: Props) {
     const { nodes, materials } = useGLTF('/whitestone.glb') as GLTFResult;
-    const { selectedColor } = useClientStore();
+
+    const { getSelectedColor } = useClientStore();
+    const selectedColor = getSelectedColor();
 
     const material = useMemo(() => {
         const newMaterial = materials.Material.clone();

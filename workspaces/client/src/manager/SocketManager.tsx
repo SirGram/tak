@@ -11,8 +11,15 @@ export const socket = io(SOCKET_URL, {
 });
 
 export const SocketManager = () => {
-    const { setGameState, setMessages, setRoom, setUsername, setPlayerColor, playerColor } =
-        useSocketStore();
+    const {
+        setGameState,
+        setMessages,
+        setRoom,
+        setUsername,
+        setPlayerColor,
+        playerColor,
+        username,
+    } = useSocketStore();
 
     const { toast } = useToast();
 
@@ -27,7 +34,7 @@ export const SocketManager = () => {
     useEffect(() => {
         socket.on(
             'roomJoined',
-            (joinedRoomId: string, username: string, color: Player, gameState: ServerGameState, ) => {
+            (joinedRoomId: string, username: string, color: Player, gameState: ServerGameState) => {
                 sendMessage(joinedRoomId, `${username} joined the room`, `System`);
                 setRoom(joinedRoomId);
                 setUsername(username);
@@ -70,7 +77,21 @@ export const SocketManager = () => {
             });
         });
 
-        
+        socket.on('playAgainVote', ({ usernameVote }) => {
+            if (username === usernameVote) {
+                toast({
+                    title: 'Play Again Vote',
+                    description: `Vote sent. Waiting for the other users to vote.`,
+                    variant: 'default',
+                });
+            } else {
+                toast({
+                    title: 'Play Again Vote',
+                    description: `${usernameVote} wants to play again.`,
+                    variant: 'default',
+                });
+            }
+        });
 
         return () => {
             socket.off('roomJoined');
@@ -78,6 +99,7 @@ export const SocketManager = () => {
             socket.off('startGame');
             socket.off('messagePosted');
             socket.off('roomLeft');
+            socket.off('playAgainVote');
         };
     }, [setMessages, setRoom, playerColor, setPlayerColor]);
 };
@@ -108,6 +130,6 @@ export function changePieceStand(roomId: string, pieceId: string) {
     socket.emit('changePieceStand', roomId, pieceId);
 }
 
-export function playAgain(roomId: string) {
-    socket.emit('playAgain', roomId);
+export function playAgain(roomId: string, username: string) {
+    socket.emit('playAgain', roomId, username);
 }
