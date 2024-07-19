@@ -13,14 +13,14 @@ interface BoardSettings {
     setMode: (mode: GameMode) => void;
 }
 
-export const useClientStore = create<BoardSelections & BoardSettings>((set, get) => ({
+export const useClientStore = create<BoardSelections & BoardSettings>((set) => ({
     showMove: 0,
     setShowMove: (value) => {
         set({ showMove: value });
     },
     getSelectedColor: () => {
         const { lightTheme } = useSettingsStore.getState();
-        return lightTheme ? '#ca8300ff' : '#ffe873'; // Example colors for light and dark themes
+        return lightTheme ? '#ca8300ff' : '#ffe873';
     },
     mode: 'multiplayer',
     setMode: (value) => {

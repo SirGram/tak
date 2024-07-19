@@ -1,20 +1,19 @@
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
-import { ChevronsLeft, ChevronsRight, ChevronsUp, ChevronsDown } from "lucide-react";
-import { useState, useEffect } from "react";
-import { Piece, Tile } from "../../../../common/types";
-import useSeconds from "../../hooks";
-import { getFlatstones } from "../../logic/board";
-import { leaveRoom, playAgain } from "../../manager/SocketManager";
-import { useSocketStore } from "../../store/SocketStore";
-import { Button } from "../ui/button";
-import { Card } from "../ui/card";
-import { useNavigate } from "react-router-dom";
-import { useClientStore } from "../../store/ClientStore";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@radix-ui/react-collapsible';
+import { ChevronsLeft, ChevronsRight, ChevronsUp, ChevronsDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Piece, Tile } from '../../../../common/types';
+import useSeconds from '../../hooks';
+import { getFlatstones } from '../../logic/board';
+import { leaveRoom, playAgain } from '../../manager/SocketManager';
+import { useSocketStore } from '../../store/SocketStore';
+import { Button } from '../ui/button';
+import { Card } from '../ui/card';
+import { useNavigate } from 'react-router-dom';
+import { useClientStore } from '../../store/ClientStore';
 
 export default function GameInfo() {
-    const { gameState, room, playerColor, username } = useSocketStore();
-    const { mode} = useClientStore();
-
+    const { gameState, room, playerColor, username, resetSocketStore } = useSocketStore();
+    const { mode } = useClientStore();
 
     const { gameStarted, currentPlayer, roundNumber, winner, gameOver } = gameState!;
 
@@ -32,7 +31,7 @@ export default function GameInfo() {
             console.log('game over');
             stopStopwatch();
         }
-        console.log(gameState)
+        console.log(gameState);
     }, [gameState, gameStarted, gameOver]);
 
     useEffect(() => {
@@ -49,9 +48,10 @@ export default function GameInfo() {
         if (!gameState?.gameStarted)
             return setMessage('Share your room with a friend to play with!');
 
-        if ((currentPlayer != playerColor) && mode == 'multiplayer') return setMessage('Waiting for your opponent move');
+        if (currentPlayer != playerColor && mode == 'multiplayer')
+            return setMessage('Waiting for your opponent move');
 
-        if (roundNumber == 1 ) {
+        if (roundNumber == 1) {
             setMessage('Select opponent starting flatstone');
         } else if (winner) {
             if (winner == 'tie') {
@@ -86,7 +86,8 @@ export default function GameInfo() {
     const handleExitRoom = () => {
         if (room) {
             leaveRoom(room);
-            navigate('/')
+            resetSocketStore();
+            setTimeout(() => navigate('/'), 0);
         }
     };
 
@@ -211,11 +212,12 @@ export default function GameInfo() {
                                 <Card className="w-fit mx-auto px-2 py-2 mt-2  flex justify-center items-center gap-4">
                                     {message}
                                     {winner && (
-                                        <Button variant="default" onClick={handlePlayAgain}>Play again</Button>
+                                        <Button variant="default" onClick={handlePlayAgain}>
+                                            Play again
+                                        </Button>
                                     )}
                                 </Card>
                             )}
-                           
                         </div>
                         <Card
                             className="w-fit flex gap-2 h-fit px-2 items-center "

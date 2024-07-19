@@ -8,6 +8,7 @@ import { Toaster } from './components/ui/toaster';
 import { SoundManager } from './manager/SoundManager';
 import AudioButton from './components/AudioButton';
 import GameUI from './components/GameUI';
+import HowToPlayAccordion from './components/HowToPlayAccordion';
 
 function App() {
     SocketManager();
@@ -15,18 +16,19 @@ function App() {
 
     const { gameState } = useSocketStore();
 
-    
-
     function handleCanvasClick() {}
 
     return (
         <>
             <main className="flex h-screen w-screen  bg-white text-black dark:bg-black dark:text-white ">
                 {!gameState ? (
-                    <header className="mt-10 fixed  w-full items-center flex flex-col z-20">
-                        <h1 className="text-8xl">TAK</h1>
+                    <header className=" fixed  w-full items-center flex flex-col z-20 h-screen">
+                        <h1 className="text-8xl mt-10">TAK</h1>
                         <h2>A beautiful game</h2>
-                        <JoinRoomCard />
+                        <div className="flex flex-col gap-4 justify-center items-center h-full -mt-10 flex-1 w-fit ">
+                            <JoinRoomCard />
+                            <HowToPlayAccordion />
+                        </div>
                     </header>
                 ) : (
                     <>
@@ -34,7 +36,7 @@ function App() {
                     </>
                 )}
                 <div className="fixed top-2 right-2 z-20">
-                    <AudioButton/>
+                    <AudioButton />
                     <ThemeButton />
                 </div>
                 <Canvas

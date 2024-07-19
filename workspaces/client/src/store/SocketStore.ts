@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import type  {ServerGameState}  from '../../../common/types';
+import type { ServerGameState } from '../../../common/types';
 
-type Player = 'white' | 'black';    
+type Player = 'white' | 'black';
 
 export interface Message {
     username?: string;
@@ -19,9 +19,10 @@ interface SocketState {
     setOpponentUsername: (value: string | null) => void;
     playerColor: Player | null;
     setPlayerColor: (value: Player | null) => void;
-    
+
     gameState: ServerGameState | null;
     setGameState: (value: ServerGameState | null) => void;
+    resetSocketStore: () => void;
 }
 
 export const useSocketStore = create<SocketState>((set) => ({
@@ -37,4 +38,16 @@ export const useSocketStore = create<SocketState>((set) => ({
     setPlayerColor: (value) => set({ playerColor: value }),
     gameState: null,
     setGameState: (value) => set({ gameState: value }),
+    resetSocketStore: () =>
+        set(
+            {
+                messages: [],
+                room: null,
+                username: null,
+                opponentUsername: null,
+                playerColor: null,
+                gameState: null,
+            },
+            true
+        ),
 }));

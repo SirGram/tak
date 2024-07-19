@@ -45,6 +45,7 @@ export const SocketManager = () => {
                     description: `${username} playing as ${color} `,
                     variant: 'default',
                 });
+                console.log(gameState, username, color);
             }
         );
 
@@ -66,10 +67,6 @@ export const SocketManager = () => {
         });
 
         socket.on('roomLeft', () => {
-            setRoom(null);
-            setUsername(null);
-            setPlayerColor(null);
-            setGameState(null);
             toast({
                 title: 'Left the room',
                 description: 'You have successfully left the room',
@@ -94,14 +91,13 @@ export const SocketManager = () => {
         });
 
         return () => {
-            socket.off('roomJoined');
             socket.off('roomFull');
             socket.off('startGame');
             socket.off('messagePosted');
             socket.off('roomLeft');
             socket.off('playAgainVote');
         };
-    }, [setMessages, setRoom, playerColor, setPlayerColor]);
+    }, [setMessages, setRoom, playerColor, setPlayerColor, toast]);
 };
 
 export function joinRoom(roomId: string, username: string, mode: GameMode) {

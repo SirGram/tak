@@ -53,7 +53,7 @@ export default function JoinRoomCard() {
     };
 
     return (
-        <Card className="flex flex-col items-center gap-2  mt-20 p-4">
+        <Card className="flex flex-col items-center gap-2   p-4">
             <span className="text-base animate-pulse mb-2">Create or join a room</span>
 
             <form
