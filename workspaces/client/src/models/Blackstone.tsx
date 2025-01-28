@@ -43,26 +43,32 @@ export function Blackstone({ isSelected, opacity, isStanding, ...props }: Props)
         position: isStanding ? [0.2, 0.25, 0.3] : [0, -0.9, 0],
         config: { mass: 1, tension: 170, friction: 26 },
     });
+    
 
     return (
         <group {...props} dispose={null}>
-            <animated.mesh
+             {isSelected && (
+                <animated.mesh
+                    castShadow
+                    receiveShadow
+                    geometry={nodes.Cylinder003.geometry}
+                    position={position as any}
+                    rotation={rotation as any}
+                    scale={[1.72, 0.34, 1.72]} // Slightly larger than the main mesh
+                >
+                    <meshBasicMaterial color={selectedColor} side={THREE.BackSide} />
+                </animated.mesh>
+            )}
+              <animated.mesh
                 castShadow
                 receiveShadow
                 geometry={nodes.Cylinder003.geometry}
                 material={material}
                 position={position as any}
                 rotation={rotation as any}
-                scale={[1.647, 0.318, 1.647]}>
-                {isSelected && (
-                    <meshStandardMaterial
-                        attach="material"
-                        color={selectedColor}
-                        opacity={1}
-                        transparent
-                    />
-                )}
-            </animated.mesh>
+                scale={[1.647, 0.318, 1.647]}
+            />
+            
         </group>
     );
 }

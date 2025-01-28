@@ -16,6 +16,7 @@
     "client:start": "npm run start --workspace=client",
     "client:build": "npm run build --workspace=client",
     "client:dev": "npm run dev --workspace=client",
+    "server:dev": "npm run dev --workspace=server",
     "server:start": "npm run start --workspace=server",
     "server:build": "npm run build --workspace=server",
     "start": "npm run client:start & npm run server:start",
@@ -24,6 +25,11 @@
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.5.7",
+    "concurrently": "^9.1.2",
     "prettier": "^3.3.2"
+  },
+  "dependencies": {
+    "@react-three/postprocessing": "^2.19.1",
+    "three": "^0.172.0"
   }
 }

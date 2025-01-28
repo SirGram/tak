@@ -17,6 +17,7 @@ import { useSocketStore } from '../store/SocketStore';
 import { Move, Piece, Position, Position3D } from '../../../common/types';
 import { useEffect, useState } from 'react';
 import { useSettingsStore } from '../store/SettingsStore';
+import { Outline } from './Outline';
 
 interface TileProps {
     position: [x: number, y: number, z: number];
@@ -33,8 +34,8 @@ function TileModel({ position, color, onClick, isMovePossible, height }: TilePro
         e.stopPropagation();
         onClick(originalPosition);
     };
-    
-    const {getSelectedColor} = useClientStore();
+
+    const { getSelectedColor } = useClientStore();
     const selectedColor = getSelectedColor();
 
     return (
@@ -60,7 +61,7 @@ function TileModel({ position, color, onClick, isMovePossible, height }: TilePro
 }
 
 function BoardTable() {
-    const {lightTheme} = useSettingsStore();
+    const { lightTheme } = useSettingsStore();
     return (
         <mesh position={[2, -0.4, 2]} receiveShadow>
             <boxGeometry args={[10, 0.1, 10]} />
@@ -80,12 +81,12 @@ function BoardTable() {
 
 export default function Board() {
     const { room, playerColor, gameState } = useSocketStore();
-    const { showMove , mode } = useClientStore();
+    const { showMove, mode } = useClientStore();
 
     console.log(gameState);
 
     let playerTurn = playerColor === gameState?.currentPlayer && gameState?.gameStarted;
-    if (mode === 'local') playerTurn = true
+    if (mode === 'local') playerTurn = true;
 
     const initialDirections = [
         { x: 0, y: 1 },
@@ -196,8 +197,8 @@ export default function Board() {
 
     // if gameState is null, currentGameState will be null as well
 
-    const isViewingHistory = gameState && showMove < gameState.history.length -1;
-    const currentGameState = isViewingHistory ? gameState.history[showMove +1] : gameState;
+    const isViewingHistory = gameState && showMove < gameState.history.length - 1;
+    const currentGameState = isViewingHistory ? gameState.history[showMove + 1] : gameState;
 
     return (
         <>
@@ -205,14 +206,15 @@ export default function Board() {
             <BoardTable />
             {currentGameState && (
                 <>
-                    <Pieces
-                        onClick={handlePieceClick}
-                        pieces={currentGameState.pieces}
-                        board={currentGameState.tiles}
-                    />
+                        <Pieces
+                            onClick={handlePieceClick}
+                            pieces={currentGameState.pieces}
+                            board={currentGameState.tiles}
+                        />
 
                     {/* Render board click tiles */}
-                    {playerTurn && gameState &&
+                    {playerTurn &&
+                        gameState &&
                         Array.from(Array(5), (_, i) => (
                             <Fragment key={i}>
                                 {Array.from(Array(5), (_, j) => (

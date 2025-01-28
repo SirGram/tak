@@ -20,7 +20,7 @@ export const useClientStore = create<BoardSelections & BoardSettings>((set) => (
     },
     getSelectedColor: () => {
         const { lightTheme } = useSettingsStore.getState();
-        return lightTheme ? '#ca8300ff' : '#ffe873';
+        return lightTheme ? '#ca8300ff' : '#FF5B3B';
     },
     mode: 'multiplayer',
     setMode: (value) => {

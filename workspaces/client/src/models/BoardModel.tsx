@@ -19,6 +19,7 @@ export function BoardModel(props: JSX.IntrinsicElements['group']) {
     const { nodes, materials } = useGLTF('/board.glb') as GLTFResult;
     const material = materials['Material.001'];
     material.color = new THREE.Color('white');
+    material.opacity = 0.5;
 
     return (
         <group {...props} dispose={null}>

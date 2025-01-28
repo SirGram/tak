@@ -45,6 +45,21 @@ export function Whitestone({ isSelected, opacity, isStanding, ...props }: Props)
 
     return (
         <group {...props} dispose={null}>
+            {/* Outline mesh - only visible when selected */}
+            {isSelected && (
+                <animated.mesh
+                    castShadow
+                    receiveShadow
+                    geometry={nodes.Cube002.geometry}
+                    position={position as any}
+                    rotation={rotation as any}
+                    scale={[1.05, 0.95, 1.05]} // Slightly larger than the main mesh
+                >
+                    <meshBasicMaterial color={selectedColor} side={THREE.BackSide} />
+                </animated.mesh>
+            )}
+
+            {/* Main mesh */}
             <animated.mesh
                 castShadow
                 receiveShadow
@@ -52,11 +67,9 @@ export function Whitestone({ isSelected, opacity, isStanding, ...props }: Props)
                 material={material}
                 position={position as any}
                 rotation={rotation as any}
-                scale={[1, 0.9, 1]}>
-                {isSelected && <meshStandardMaterial attach="material" color={selectedColor} />}
-            </animated.mesh>
+                scale={[1, 0.9, 1]}
+            />
         </group>
     );
 }
-
 useGLTF.preload('/whitestone.glb');

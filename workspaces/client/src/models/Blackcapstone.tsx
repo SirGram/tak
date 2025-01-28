@@ -35,8 +35,24 @@ export function Blackcapstone({ isSelected, opacity, ...props }: Props) {
 
     const { getSelectedColor } = useClientStore();
     const selectedColor = getSelectedColor();
+    
     return (
         <group {...props} dispose={null}>
+            {/* Outline mesh - only visible when selected */}
+            {isSelected && (
+                <mesh
+                    castShadow
+                    receiveShadow
+                    geometry={nodes.Cylinder001.geometry}
+                    rotation={[0, -0.12, 0]}
+                    position={[0, -0.9, 0]}
+                    scale={[1.72, 0.34, 1.72]} // Slightly larger than the main mesh
+                >
+                    <meshBasicMaterial color={selectedColor} side={THREE.BackSide} />
+                </mesh>
+            )}
+    
+            {/* Main mesh */}
             <mesh
                 castShadow
                 receiveShadow
@@ -44,11 +60,8 @@ export function Blackcapstone({ isSelected, opacity, ...props }: Props) {
                 material={material}
                 rotation={[0, -0.12, 0]}
                 position={[0, -0.9, 0]}
-                scale={[1.647, 0.318, 1.647]}>
-                {isSelected && (
-                    <meshStandardMaterial attach="material" color={selectedColor} transparent />
-                )}
-            </mesh>
+                scale={[1.647, 0.318, 1.647]}
+            />
         </group>
     );
 }
