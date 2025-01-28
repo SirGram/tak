@@ -1,6 +1,5 @@
 import { useSpring, animated } from '@react-spring/three';
 import { ThreeEvent } from '@react-three/fiber';
-import { useClientStore } from '../store/ClientStore';
 import { Blackstone } from '../models/Blackstone';
 import { Blackcapstone } from '../models/Blackcapstone';
 import { Whitestone } from '../models/Whitestone';
@@ -37,73 +36,73 @@ export default function Pieces({
     const topPieces = getTopPieces(transformedPieces, board);
 
     function transformPieces(pieces: Piece[], board: TBoard): Piece3DExtended[] {
-        let whiteFlatstoneCount = 0;
-        let blackFlatstoneCount = 0;
-        let whiteCapstoneCount = 0;
-        let blackCapstoneCount = 0;
-        const stackHeights: { [key: string]: number } = {};
-
+        const allWhiteFlat = pieces
+          .filter(p => (p.type === 'flatstone' || p.type === 'standingstone') && p.color === 'white')
+          .sort((a, b) => pieces.indexOf(a) - pieces.indexOf(b));
+        const allBlackFlat = pieces
+          .filter(p => (p.type === 'flatstone' || p.type === 'standingstone') && p.color === 'black')
+          .sort((a, b) => pieces.indexOf(a) - pieces.indexOf(b));
+        const allWhiteCap = pieces
+          .filter(p => p.type === 'capstone' && p.color === 'white')
+          .sort((a, b) => pieces.indexOf(a) - pieces.indexOf(b));
+        const allBlackCap = pieces
+          .filter(p => p.type === 'capstone' && p.color === 'black')
+          .sort((a, b) => pieces.indexOf(a) - pieces.indexOf(b));
+      
         return pieces.map((piece: Piece): Piece3DExtended => {
-            const tile = board.find((t) => t.pieces.includes(piece.id));
-            if (tile) {
-                // If the piece is on the board
-                const tileKey = `${tile.position.x},${tile.position.y}`;
-
-                if (!stackHeights[tileKey]) {
-                    stackHeights[tileKey] = 0;
-                }
-
-                const pieceIndex = tile.pieces.indexOf(piece.id);
-                const pieceHeight = tile.pieces.slice(0, pieceIndex).reduce((height, pieceId) => {
-                    const p = pieces.find((p) => p.id === pieceId);
-                    return height + (p ? pieceHeights[p.type] : 0);
-                }, 0);
-
-                return {
-                    ...piece,
-                    position: [tile.position.x, pieceHeight, tile.position.y],
-                    height: pieceHeights[piece.type],
-                    model: getPieceModel(piece),
-                };
-            } else {
-                // If the piece is not on the board, place it in a pile
-                let position: Position3D;
-                let height: number;
-
-                if (piece.type === 'flatstone' || piece.type === 'standingstone') {
-                    if (piece.color === 'white') {
-                        const pileIndex = whiteFlatstoneCount % 3;
-                        position = WHITE_PILES[pileIndex];
-                        height = Math.floor(whiteFlatstoneCount / 3) * pieceHeights['flatstone'];
-                        whiteFlatstoneCount++;
-                    } else {
-                        const pileIndex = blackFlatstoneCount % 3;
-                        position = BLACK_PILES[pileIndex];
-                        height = Math.floor(blackFlatstoneCount / 3) * pieceHeights['flatstone'];
-                        blackFlatstoneCount++;
-                    }
-                } else {
-                    // capstone
-                    if (piece.color === 'white') {
-                        position = WHITE_CAPSTONE_PILE;
-                        height = whiteCapstoneCount * pieceHeights['capstone'];
-                        whiteCapstoneCount++;
-                    } else {
-                        position = BLACK_CAPSTONE_PILE;
-                        height = blackCapstoneCount * pieceHeights['capstone'];
-                        blackCapstoneCount++;
-                    }
-                }
-
-                return {
-                    ...piece,
-                    position: [position[0], position[1] + height, position[2]],
-                    height: pieceHeights[piece.type],
-                    model: getPieceModel(piece),
-                };
+          const tile = board.find((t) => t.pieces.includes(piece.id));
+          if (tile) {
+            // Calculate position for pieces on the board 
+            const pieceIndex = tile.pieces.indexOf(piece.id);
+            const pieceHeight = tile.pieces.slice(0, pieceIndex).reduce((height, pieceId) => {
+              const p = pieces.find((p) => p.id === pieceId);
+              return height + (p ? pieceHeights[p.type] : 0);
+            }, 0);
+            return {
+              ...piece,
+              position: [tile.position.x, pieceHeight, tile.position.y],
+              height: pieceHeights[piece.type],
+              model: getPieceModel(piece),
+            };
+          } else {
+            // Calculate fixed position for pile pieces on stack based on original order
+            let position: Position3D = [0, 0, 0];
+            let height = 0;
+      
+            if (piece.type === 'flatstone' || piece.type === 'standingstone') {
+              const isWhite = piece.color === 'white';
+              const group = isWhite ? allWhiteFlat : allBlackFlat;
+              const originalIndex = group.indexOf(piece);
+              if (originalIndex === -1) {
+                console.error('Piece not found in group:', piece.id);
+              } else {
+                const pileIndex = originalIndex % 3; // Cycle through 3 piles
+                const pile = isWhite ? WHITE_PILES[pileIndex] : BLACK_PILES[pileIndex];
+                height = Math.floor(originalIndex / 3) * pieceHeights.flatstone;
+                position = [pile[0], pile[1] + height, pile[2]];
+              }
+            } else if (piece.type === 'capstone') {
+              const isWhite = piece.color === 'white';
+              const group = isWhite ? allWhiteCap : allBlackCap;
+              const originalIndex = group.indexOf(piece);
+              if (originalIndex === -1) {
+                console.error('Piece not found in group:', piece.id);
+              } else {
+                const pile = isWhite ? WHITE_CAPSTONE_PILE : BLACK_CAPSTONE_PILE;
+                height = originalIndex * pieceHeights.capstone;
+                position = [pile[0], pile[1] + height, pile[2]];
+              }
             }
+      
+            return {
+              ...piece,
+              position,
+              height: pieceHeights[piece.type],
+              model: getPieceModel(piece),
+            };
+          }
         });
-    }
+      }
 
     function getPieceModel(piece: Piece): PieceModel {
         if (piece.color === 'white') {
@@ -176,7 +175,7 @@ function Piece({
     });
 
     const isPieceStanding = piece.type === 'standingstone';
-    let opacity = 1;
+    const opacity = 1;
 
     const pieceModels: Record<Piece3D['model'], JSX.Element> = {
         Blackstone: (
