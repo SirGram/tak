@@ -25,7 +25,6 @@ export function isTileEmpty(position: Position, tiles: TBoard): boolean {
 
 export function isPieceOnBoard(pieceId: string, tiles: TBoard): boolean {
     const isPiece = tiles.some((tile) => tile.pieces.includes(pieceId));
-    console.log('is piece', isPiece, pieceId, tiles);
     return isPiece;
 }
 
@@ -49,7 +48,7 @@ export function calculateMoves(
     pieces: Piece[],
     directions: Position[]
 ): Position[] {
-    console.log(pieceId, tiles, pieces, directions);
+    // console.log(pieceId, tiles, pieces, directions);
     // piece not on  board
     if (!isPieceOnBoard(pieceId, tiles)) return getEmptyBoardPositions(tiles);
     //piece on board
@@ -70,9 +69,9 @@ export function calculateMoves(
             if (!targetTile) return;
             const originPiece = getPiece(pieceId, pieces);
             const targetablePieces = targetTile.pieces.map((pieceId) => getPiece(pieceId, pieces));
-            console.log(targetablePieces);
 
             const lastPiece = targetablePieces[targetablePieces.length - 1];
+            console.log('lastpiece target', lastPiece);
             // origin: piece -> target: capstone
             if (lastPiece && lastPiece.type === 'capstone') return;
             // origin: flatstone/standingstone -> target: standingstone

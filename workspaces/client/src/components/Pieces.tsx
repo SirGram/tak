@@ -139,7 +139,7 @@ export default function Pieces({
 
         return topPieces;
     }
-    console.log(pieces, board);
+    //console.log(pieces, board);
 
     return (
         <>

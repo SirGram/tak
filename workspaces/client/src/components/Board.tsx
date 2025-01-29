@@ -83,7 +83,7 @@ export default function Board() {
     const { room, playerColor, gameState } = useSocketStore();
     const { showMove, mode } = useClientStore();
 
-    console.log(gameState);
+    //console.log(gameState);
 
     let playerTurn = playerColor === gameState?.currentPlayer && gameState?.gameStarted;
     if (mode === 'local') playerTurn = true;
@@ -98,6 +98,7 @@ export default function Board() {
     const [firstMove, setFirstMove] = useState(false);
 
     const updateAllowedDirections = (lastPosition: Position) => {
+        
         if (!selectedPiece) return;
 
         const selectedPieceTile = getTileFromPiece(selectedPiece.id, gameState!.tiles);
@@ -114,7 +115,7 @@ export default function Board() {
         setFirstMove(true);
     };
 
-    console.log(allowedDirections);
+    //console.log(allowedDirections);
 
     const selectedPiece: Piece | null =
         gameState && gameState.selectedStack.length > 0 ? gameState.selectedStack[0] : null;
@@ -139,12 +140,12 @@ export default function Board() {
     }
 
     useEffect(() => {
-        if (gameState?.roundNumber) {
+        if (gameState?.currentPlayer) {
             setAllowedDirections(initialDirections);
         }
-    }, [gameState?.roundNumber]);
+    }, [gameState?.currentPlayer]);
 
-    console.log(gameState);
+    //console.log(gameState);
 
     const playerThatPlays = mode === 'multiplayer' ? playerColor : gameState?.currentPlayer;
 
@@ -152,7 +153,6 @@ export default function Board() {
         if (isViewingHistory) return;
         if (!playerTurn || gameState!.gameOver) return;
         e.stopPropagation();
-        console.log('piece clicked');
         const piece = getPiece(pieceId, gameState!.pieces);
         if (!piece) return;
 
