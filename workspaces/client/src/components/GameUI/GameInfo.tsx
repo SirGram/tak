@@ -100,46 +100,78 @@ export default function GameInfo() {
     const renderBoard2D = () => {
         if (!gameState) return null;
         const boardSize = Math.sqrt(gameState.tiles.length);
-        const board: (Piece | null)[][] = Array(boardSize)
+        const board: Piece[][][] = Array(boardSize)
             .fill(null)
-            .map(() => Array(boardSize).fill(null));
+            .map(() =>
+                Array(boardSize)
+                    .fill(null)
+                    .map(() => [])
+            );
 
         gameState.tiles.forEach((tile: Tile) => {
             if (tile.pieces.length > 0) {
-                const pieceId = tile.pieces[tile.pieces.length - 1];
-                const piece = gameState.pieces.find((p) => p.id === pieceId);
-                if (piece) {
-                    board[tile.position.y][tile.position.x] = piece;
-                }
+                tile.pieces.forEach((pieceId) => {
+                    const piece = gameState.pieces.find((p) => p.id === pieceId);
+                    if (piece) {
+                        // push pieces instead of overwriting
+                        if (board[tile.position.y][tile.position.x]) {
+                            board[tile.position.y][tile.position.x].push(piece);
+                        }
+                    }
+                });
             }
         });
+        console.log(board);
 
         return (
             <div className="w-48 h-48 p-2 bg-gray-200 dark:bg-gray-900 rounded-lg shadow-inner">
                 <div
-                    className="w-full h-full grid gap-[1px] bg-gray-400 dark:bg-gray-700"
+                    className="w-full h-full grid  bg-gray-400 dark:bg-gray-700"
                     style={{ gridTemplateColumns: `repeat(${boardSize}, 1fr)` }}>
                     {board.map((row, y) =>
-                        row.map((piece, x) => (
-                            <div
-                                key={`${x}-${y}`}
-                                className={`aspect-square flex items-center justify-center bg-gray-100 dark:bg-gray-950`}>
-                                {piece && (
-                                    <div
-                                        className={`w-4/5 h-4/5 ${
-                                            piece.color === 'black'
-                                                ? 'rounded-full'
-                                                : 'rounded-sm w-4/6 h-4/6'
-                                        } ${
-                                            piece.color === 'white'
-                                                ? 'bg-yellow-100 border-yellow-300'
-                                                : 'bg-orange-950 border-orange-900'
-                                        } border-2 shadow-md transition-transform hover:scale-110`}
-                                        title={`${piece.color} ${piece.type}`}
-                                    />
-                                )}
-                            </div>
-                        ))
+                        row.map((tile, x) => {
+                            const lastPiece = tile.length > 0 ? tile[tile.length - 1] : null;
+                            const lastPieceColor = lastPiece ? lastPiece.color : '';
+
+                            return (
+                                <div
+                                    key={`${x}-${y}`}
+                                    className={`relative aspect-square flex items-center justify-center bg-gray-100 dark:bg-gray-950
+                                    ${(x + y) % 2 === 0 ? ' bg-gray-100 dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800'}`}>
+                                    {tile.length > 0 && lastPiece && (
+                                        <>
+                                            <div className="w-4/5 h-4/5 transition-transform hover:scale-110 overflow-hidden">
+                                                <div
+                                                    className={`flex items-center justify-center w-full h-full overflow-hidden ${
+                                                        lastPiece.color === 'black'
+                                                            ? 'rounded-full bg-orange-950 text-white '
+                                                            : 'rounded-sm w-4/5 h-4/5 bg-yellow-300 text-black'
+                                                    } ${
+                                                        lastPiece.type === 'capstone'
+                                                            ? 'border-red-500'
+                                                            : 'border-transparent'
+                                                    } border-4 `}
+                                                    title={`${lastPiece.color} ${lastPiece.type}`}>
+                                                    <span className="z-10 font-bold text-sm">
+                                                        {tile.length}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {/* Adjusted standingstone base */}
+                                            {lastPiece.type === 'standingstone' && (
+                                                <div
+                                                    className={`absolute inset-x-0 bottom-0 w-full h-1/6 ${
+                                                        lastPieceColor === 'black'
+                                                            ? 'bg-orange-950'
+                                                            : 'bg-yellow-300'
+                                                    }`}
+                                                />
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            );
+                        })
                     )}
                 </div>
             </div>
@@ -230,10 +262,11 @@ export default function GameInfo() {
                                     </span>
 
                                     <div className="py-1 w-[1px] mx-2 h-6 bg-muted dark:bg-gray-600 "></div>
-                                    <span className=" h-full items-center flex  gap-1 font-semibold">
-                                        <div className="size-6 bg-brown  border-yellow-300 border-2 bg-yellow-100 rounded-sm "></div>
+                                    <span className="h-full flex items-center gap-1 font-semibold">
+                                        <div className="size-6 bg-yellow-300 border-yellow-600 border-2 rounded-sm"></div>
                                         {whiteFlatstones}
                                     </span>
+
                                     <CollapsibleTrigger asChild className=" h-full">
                                         <Button variant="ghost" size="sm" className="w-9 p-0 m-0">
                                             {is2DBoardOpen ? (
