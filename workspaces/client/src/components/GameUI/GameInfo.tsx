@@ -13,7 +13,7 @@ import { useClientStore } from '../../store/ClientStore';
 
 export default function GameInfo() {
     const { gameState, room, playerColor, username, resetSocketStore } = useSocketStore();
-    const { mode } = useClientStore();
+    const { mode, showMove } = useClientStore();
 
     const { gameStarted, currentPlayer, roundNumber, winner, gameOver } = gameState!;
 
@@ -32,7 +32,7 @@ export default function GameInfo() {
             stopStopwatch();
         }
         console.log(gameState);
-    }, [gameState, gameStarted, gameOver]);
+    }, [gameStarted, gameOver]);
 
     useEffect(() => {
         if (gameState?.gameOver) {
@@ -107,8 +107,10 @@ export default function GameInfo() {
                     .fill(null)
                     .map(() => [])
             );
+        const isViewingHistory = gameState && showMove < gameState.history.length - 1;
+        const currentGameState = isViewingHistory ? gameState.history[showMove + 1] : gameState;
 
-        gameState.tiles.forEach((tile: Tile) => {
+        currentGameState.tiles.forEach((tile: Tile) => {
             if (tile.pieces.length > 0) {
                 tile.pieces.forEach((pieceId) => {
                     const piece = gameState.pieces.find((p) => p.id === pieceId);
@@ -121,7 +123,6 @@ export default function GameInfo() {
                 });
             }
         });
-        console.log(board);
 
         return (
             <div className="w-48 h-48 p-2 bg-gray-200 dark:bg-gray-900 rounded-lg shadow-inner">

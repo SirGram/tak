@@ -298,14 +298,14 @@ function Piece({
             }}
             onPointerOver={(e) => {
                 e.stopPropagation();
-                if (isClickable) {
+                if (isClickable && !isPieceSelected) {
                     onPointerOver();
                     setPieceHovered(true);
                 }
             }}
             onPointerOut={(e) => {
                 e.stopPropagation();
-                if (isClickable) {
+                if (isClickable  && !isPieceSelected) {
                     onPointerOut();
                     setPieceHovered(false);
                 }
