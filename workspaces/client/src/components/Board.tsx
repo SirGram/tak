@@ -15,9 +15,8 @@ import Pieces from './Pieces';
 import { changePieceStand, makeMove, selectStack } from '../manager/SocketManager';
 import { useSocketStore } from '../store/SocketStore';
 import { Move, Piece, Position, Position3D } from '../../../common/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSettingsStore } from '../store/SettingsStore';
-import { Outline } from './Outline';
 
 interface TileProps {
     position: [x: number, y: number, z: number];
@@ -98,7 +97,6 @@ export default function Board() {
     const [firstMove, setFirstMove] = useState(false);
 
     const updateAllowedDirections = (lastPosition: Position) => {
-        
         if (!selectedPiece) return;
 
         const selectedPieceTile = getTileFromPiece(selectedPiece.id, gameState!.tiles);
@@ -199,6 +197,32 @@ export default function Board() {
 
     const isViewingHistory = gameState && showMove < gameState.history.length - 1;
     const currentGameState = isViewingHistory ? gameState.history[showMove + 1] : gameState;
+    const clickablePieces = useMemo(() => {
+        if (!currentGameState || !playerThatPlays) return new Set<string>();
+
+        return new Set(
+            currentGameState.pieces
+                .filter((piece) => {
+                    const tile = getTileFromPiece(piece.id, currentGameState.tiles);
+
+                    if (tile) {
+                        // On-board pieces - must be top of stack and player's color
+                        return isPieceAtTopFromPlayer(
+                            tile,
+                            currentGameState.pieces,
+                            playerThatPlays
+                        );
+                    } else {
+                        // Pile pieces
+                        if (gameState?.roundNumber === 1) {
+                            return piece.color !== playerThatPlays && piece.type === 'flatstone';
+                        }
+                        return piece.color === playerThatPlays;
+                    }
+                })
+                .map((piece) => piece.id)
+        );
+    }, [currentGameState, playerThatPlays]);
 
     return (
         <>
@@ -206,11 +230,12 @@ export default function Board() {
             <BoardTable />
             {currentGameState && (
                 <>
-                        <Pieces
-                            onClick={handlePieceClick}
-                            pieces={currentGameState.pieces}
-                            board={currentGameState.tiles}
-                        />
+                    <Pieces
+                        onClick={handlePieceClick}
+                        pieces={currentGameState.pieces}
+                        board={currentGameState.tiles}
+                        clickablePieces={clickablePieces}
+                    />
 
                     {/* Render board click tiles */}
                     {playerTurn &&

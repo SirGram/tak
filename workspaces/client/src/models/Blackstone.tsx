@@ -8,7 +8,6 @@ import { useGLTF } from '@react-three/drei';
 import { GLTF } from 'three-stdlib';
 import { GroupProps } from '@react-three/fiber';
 import { useClientStore } from '../store/ClientStore';
-import { Position3D } from '../../../common/types';
 import { animated, useSpring } from '@react-spring/three';
 type GLTFResult = GLTF & {
     nodes: {
@@ -23,9 +22,10 @@ type Props = GroupProps & {
     isSelected: boolean;
     opacity: number;
     isStanding: boolean;
+    isHovered: boolean;
 };
 
-export function Blackstone({ isSelected, opacity, isStanding, ...props }: Props) {
+export function Blackstone({ isSelected, opacity, isStanding, isHovered, ...props }: Props) {
     const { nodes, materials } = useGLTF('/blackstone.glb') as GLTFResult;
 
     const { getSelectedColor } = useClientStore();
@@ -47,10 +47,9 @@ export function Blackstone({ isSelected, opacity, isStanding, ...props }: Props)
 
     return (
         <group {...props} dispose={null}>
-             {isSelected && (
+             {(isSelected || isHovered) && (
                 <animated.mesh
-                    castShadow
-                    receiveShadow
+                  
                     geometry={nodes.Cylinder003.geometry}
                     position={position as any}
                     rotation={rotation as any}

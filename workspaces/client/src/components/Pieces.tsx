@@ -7,17 +7,23 @@ import { Whitecapstone } from '../models/Whitecapstone';
 import type { Piece, Position3D, TBoard, PieceModel } from '../../../common/types';
 import { Piece3D, pieceHeights } from '../logic/types';
 import { useSocketStore } from '../store/SocketStore';
+import { useState } from 'react';
 
-export type Piece3DExtended = Piece3D & {};
+export type Piece3DExtended = Piece3D & {
+    isTopOfPile?: boolean;
+    inPile?: boolean;
+};
 
 export default function Pieces({
     onClick,
     pieces,
     board,
+    clickablePieces,
 }: {
     onClick: (e: ThreeEvent<MouseEvent>, pieceId: string) => void;
     pieces: Piece[];
     board: TBoard;
+    clickablePieces: Set<string>;
 }) {
     const WHITE_PILES: Position3D[] = [
         [-2, 0, 0],
@@ -33,76 +39,101 @@ export default function Pieces({
     const BLACK_CAPSTONE_PILE: Position3D = [5.7, 0, 0];
 
     const transformedPieces = transformPieces(pieces, board);
-    const topPieces = getTopPieces(transformedPieces, board);
 
     function transformPieces(pieces: Piece[], board: TBoard): Piece3DExtended[] {
         const allWhiteFlat = pieces
-          .filter(p => (p.type === 'flatstone' || p.type === 'standingstone') && p.color === 'white')
-          .sort((a, b) => pieces.indexOf(a) - pieces.indexOf(b));
+            .filter(
+                (p) => (p.type === 'flatstone' || p.type === 'standingstone') && p.color === 'white'
+            )
+            .sort((a, b) => pieces.indexOf(a) - pieces.indexOf(b));
         const allBlackFlat = pieces
-          .filter(p => (p.type === 'flatstone' || p.type === 'standingstone') && p.color === 'black')
-          .sort((a, b) => pieces.indexOf(a) - pieces.indexOf(b));
+            .filter(
+                (p) => (p.type === 'flatstone' || p.type === 'standingstone') && p.color === 'black'
+            )
+            .sort((a, b) => pieces.indexOf(a) - pieces.indexOf(b));
         const allWhiteCap = pieces
-          .filter(p => p.type === 'capstone' && p.color === 'white')
-          .sort((a, b) => pieces.indexOf(a) - pieces.indexOf(b));
+            .filter((p) => p.type === 'capstone' && p.color === 'white')
+            .sort((a, b) => pieces.indexOf(a) - pieces.indexOf(b));
         const allBlackCap = pieces
-          .filter(p => p.type === 'capstone' && p.color === 'black')
-          .sort((a, b) => pieces.indexOf(a) - pieces.indexOf(b));
-      
-        return pieces.map((piece: Piece): Piece3DExtended => {
-          const tile = board.find((t) => t.pieces.includes(piece.id));
-          if (tile) {
-            // Calculate position for pieces on the board 
-            const pieceIndex = tile.pieces.indexOf(piece.id);
-            const pieceHeight = tile.pieces.slice(0, pieceIndex).reduce((height, pieceId) => {
-              const p = pieces.find((p) => p.id === pieceId);
-              return height + (p ? pieceHeights[p.type] : 0);
-            }, 0);
-            return {
-              ...piece,
-              position: [tile.position.x, pieceHeight, tile.position.y],
-              height: pieceHeights[piece.type],
-              model: getPieceModel(piece),
-            };
-          } else {
-            // Calculate fixed position for pile pieces on stack based on original order
-            let position: Position3D = [0, 0, 0];
-            let height = 0;
-      
-            if (piece.type === 'flatstone' || piece.type === 'standingstone') {
-              const isWhite = piece.color === 'white';
-              const group = isWhite ? allWhiteFlat : allBlackFlat;
-              const originalIndex = group.indexOf(piece);
-              if (originalIndex === -1) {
-                console.error('Piece not found in group:', piece.id);
-              } else {
-                const pileIndex = originalIndex % 3; // Cycle through 3 piles
-                const pile = isWhite ? WHITE_PILES[pileIndex] : BLACK_PILES[pileIndex];
-                height = Math.floor(originalIndex / 3) * pieceHeights.flatstone;
-                position = [pile[0], pile[1] + height, pile[2]];
-              }
-            } else if (piece.type === 'capstone') {
-              const isWhite = piece.color === 'white';
-              const group = isWhite ? allWhiteCap : allBlackCap;
-              const originalIndex = group.indexOf(piece);
-              if (originalIndex === -1) {
-                console.error('Piece not found in group:', piece.id);
-              } else {
-                const pile = isWhite ? WHITE_CAPSTONE_PILE : BLACK_CAPSTONE_PILE;
-                height = originalIndex * pieceHeights.capstone;
-                position = [pile[0], pile[1] + height, pile[2]];
-              }
+            .filter((p) => p.type === 'capstone' && p.color === 'black')
+            .sort((a, b) => pieces.indexOf(a) - pieces.indexOf(b));
+
+        const transformed = pieces.map((piece: Piece): Piece3DExtended => {
+            const tile = board.find((t) => t.pieces.includes(piece.id));
+            if (tile) {
+                const pieceIndex = tile.pieces.indexOf(piece.id);
+                const pieceHeight = tile.pieces.slice(0, pieceIndex).reduce((height, pieceId) => {
+                    const p = pieces.find((p) => p.id === pieceId);
+                    return height + (p ? pieceHeights[p.type] : 0);
+                }, 0);
+                return {
+                    ...piece,
+                    position: [tile.position.x, pieceHeight, tile.position.y],
+                    height: pieceHeights[piece.type],
+                    model: getPieceModel(piece),
+                    inPile: false,
+                    isTopOfPile: false,
+                };
+            } else {
+                let position: Position3D = [0, 0, 0];
+                let height = 0;
+
+                if (piece.type === 'flatstone' || piece.type === 'standingstone') {
+                    const isWhite = piece.color === 'white';
+                    const group = isWhite ? allWhiteFlat : allBlackFlat;
+                    const originalIndex = group.indexOf(piece);
+                    if (originalIndex === -1) {
+                        console.error('Piece not found in group:', piece.id);
+                    } else {
+                        const pileIndex = originalIndex % 3;
+                        const pile = isWhite ? WHITE_PILES[pileIndex] : BLACK_PILES[pileIndex];
+                        height = Math.floor(originalIndex / 3) * pieceHeights.flatstone;
+                        position = [pile[0], pile[1] + height, pile[2]];
+                    }
+                } else if (piece.type === 'capstone') {
+                    const isWhite = piece.color === 'white';
+                    const group = isWhite ? allWhiteCap : allBlackCap;
+                    const originalIndex = group.indexOf(piece);
+                    if (originalIndex === -1) {
+                        console.error('Piece not found in group:', piece.id);
+                    } else {
+                        const pile = isWhite ? WHITE_CAPSTONE_PILE : BLACK_CAPSTONE_PILE;
+                        height = originalIndex * pieceHeights.capstone;
+                        position = [pile[0], pile[1] + height, pile[2]];
+                    }
+                }
+
+                return {
+                    ...piece,
+                    position,
+                    height: pieceHeights[piece.type],
+                    model: getPieceModel(piece),
+                    inPile: true,
+                    isTopOfPile: false,
+                };
             }
-      
-            return {
-              ...piece,
-              position,
-              height: pieceHeights[piece.type],
-              model: getPieceModel(piece),
-            };
-          }
         });
-      }
+
+        // Determine top pieces in each pile
+        const piles = new Map<string, Piece3DExtended[]>();
+        transformed.forEach((piece) => {
+            if (piece.inPile) {
+                const key = `${piece.position[0]},${piece.position[2]}`;
+                if (!piles.has(key)) {
+                    piles.set(key, []);
+                }
+                piles.get(key)!.push(piece);
+            }
+        });
+
+        piles.forEach((pilePieces) => {
+            if (pilePieces.length === 0) return;
+            const sorted = [...pilePieces].sort((a, b) => b.position[1] - a.position[1]);
+            sorted[0].isTopOfPile = true;
+        });
+
+        return transformed;
+    }
 
     function getPieceModel(piece: Piece): PieceModel {
         if (piece.color === 'white') {
@@ -112,60 +143,105 @@ export default function Pieces({
         }
     }
 
-    function getTopPieces(pieces: Piece3D[], board: TBoard): Set<string> {
-        const topPieces = new Set<string>();
+    const handlePieceClick = (e: ThreeEvent<MouseEvent>, pieceId: string) => {
+        const clickedPiece = transformedPieces.find((p) => p.id === pieceId);
+        if (!clickedPiece) return;
 
-        // Get clickable pieces on the board
-        board.forEach((tile) => {
-            if (tile.pieces.length > 0) {
-                // Get the last 5 pieces (or all if less than 5) of the tile
-                const clickablePieces = tile.pieces.slice(
-                    Math.max(0, tile.pieces.length - Math.sqrt(board.length))
-                );
-                clickablePieces.forEach((pieceId) => topPieces.add(pieceId));
-            }
-        });
-
-        // Get top pieces in the piles
-        const piles = [...WHITE_PILES, ...BLACK_PILES, WHITE_CAPSTONE_PILE, BLACK_CAPSTONE_PILE];
-        piles.forEach((pile) => {
-            const pilePieces = pieces.filter(
-                (piece) => piece.position[0] === pile[0] && piece.position[2] === pile[2]
+        // If piece is in a pile, return the top piece
+        let topPieceId = pieceId;
+        if (clickedPiece.inPile) {
+            const pileKey = `${clickedPiece.position[0]},${clickedPiece.position[2]}`;
+            const topPiece = transformedPieces.find(
+                (p) =>
+                    p.inPile &&
+                    `${p.position[0]},${p.position[2]}` === pileKey &&
+                    p.isTopOfPile
             );
-            if (pilePieces.length > 0) {
-                topPieces.add(pilePieces[pilePieces.length - 1].id);
+            if (topPiece) {
+                topPieceId = topPiece.id;
             }
-        });
+        }
 
-        return topPieces;
-    }
-    //console.log(pieces, board);
+        onClick(e, topPieceId);
+    };
+
+    const [hoveredPileCounts, setHoveredPileCounts] = useState<Map<string, number>>(new Map());
+
+    const getPileKey = (piece: Piece3DExtended): string | null => {
+        if (piece.inPile) {
+            return `${piece.position[0]},${piece.position[2]}`;
+        }
+        return null;
+    };
+
+    const handlePointerOver = (piece: Piece3DExtended) => {
+        if (!clickablePieces.has(piece.id)) return;
+        const pileKey = getPileKey(piece);
+        if (pileKey) {
+            setHoveredPileCounts(prev => {
+                const newMap = new Map(prev);
+                newMap.set(pileKey, (newMap.get(pileKey) || 0) + 1);
+                return newMap;
+            });
+        }
+    };
+
+    const handlePointerOut = (piece: Piece3DExtended) => {
+        const pileKey = getPileKey(piece);
+        if (pileKey) {
+            setHoveredPileCounts(prev => {
+                const newMap = new Map(prev);
+                const count = newMap.get(pileKey) || 0;
+                if (count > 1) {
+                    newMap.set(pileKey, count - 1);
+                } else {
+                    newMap.delete(pileKey);
+                }
+                return newMap;
+            });
+        }
+    };
+
 
     return (
         <>
-            {transformedPieces.map((piece) => (
-                <Piece
-                    key={piece.id}
-                    piece={piece}
-                    onClick={onClick}
-                    isClickable={topPieces.has(piece.id)}
-                />
-            ))}
+            {transformedPieces.map((piece) => {
+                const pileKey = getPileKey(piece);
+                const pileIsHovered = pileKey ? (hoveredPileCounts.get(pileKey) || 0) > 0 : false;
+                return (
+                    <Piece
+                        key={piece.id}
+                        piece={piece}
+                        onClick={handlePieceClick}
+                        isClickable={clickablePieces.has(piece.id)}
+                        onPointerOver={() => handlePointerOver(piece)}
+                        onPointerOut={() => handlePointerOut(piece)}
+                        pileIsHovered={pileIsHovered}
+                    />
+                );
+            })}
         </>
     );
 }
-
 function Piece({
     piece,
     onClick,
     isClickable,
+    onPointerOver,
+    onPointerOut,
+    pileIsHovered,
 }: {
-    piece: Piece3D;
+    piece: Piece3DExtended;
     onClick: (e: ThreeEvent<MouseEvent>, pieceId: string) => void;
     isClickable: boolean;
+    onPointerOver: () => void;
+    onPointerOut: () => void;
+    pileIsHovered: boolean;
 }) {
     const { gameState } = useSocketStore();
     const isPieceSelected = gameState!.selectedStack.some((p) => p.id === piece.id);
+
+    const [isPieceHovered, setPieceHovered] = useState(false);
 
     const springProps: any = useSpring({
         position: isPieceSelected
@@ -183,6 +259,7 @@ function Piece({
                 isSelected={isPieceSelected ?? false}
                 opacity={opacity}
                 isStanding={isPieceStanding}
+                isHovered={pileIsHovered || isPieceHovered}
             />
         ),
         Whitestone: (
@@ -190,12 +267,26 @@ function Piece({
                 isSelected={isPieceSelected ?? false}
                 opacity={opacity}
                 isStanding={isPieceStanding}
+                isHovered={pileIsHovered || isPieceHovered}
             />
         ),
-        Blackcapstone: <Blackcapstone isSelected={isPieceSelected ?? false} opacity={opacity} />,
-        Whitecapstone: <Whitecapstone isSelected={isPieceSelected ?? false} opacity={opacity} />,
+        Blackcapstone: (
+            <Blackcapstone
+                isSelected={isPieceSelected ?? false}
+                opacity={opacity}
+                isHovered={pileIsHovered || isPieceHovered}
+            />
+        ),
+        Whitecapstone: (
+            <Whitecapstone
+                isSelected={isPieceSelected ?? false}
+                opacity={opacity}
+                isHovered={pileIsHovered || isPieceHovered}
+            />
+        ),
     };
 
+   
     return (
         <animated.mesh
             {...springProps}
@@ -203,6 +294,20 @@ function Piece({
             onClick={(e) => {
                 if (isClickable) {
                     onClick(e, piece.id);
+                }
+            }}
+            onPointerOver={(e) => {
+                e.stopPropagation();
+                if (isClickable) {
+                    onPointerOver();
+                    setPieceHovered(true);
+                }
+            }}
+            onPointerOut={(e) => {
+                e.stopPropagation();
+                if (isClickable) {
+                    onPointerOut();
+                    setPieceHovered(false);
                 }
             }}>
             {pieceModels[piece.model]}

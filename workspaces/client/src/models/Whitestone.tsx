@@ -23,8 +23,9 @@ type Props = GroupProps & {
     isSelected: boolean;
     opacity: number;
     isStanding: boolean;
+    isHovered: boolean;
 };
-export function Whitestone({ isSelected, opacity, isStanding, ...props }: Props) {
+export function Whitestone({ isSelected, opacity, isStanding, isHovered, ...props }: Props) {
     const { nodes, materials } = useGLTF('/whitestone.glb') as GLTFResult;
 
     const { getSelectedColor } = useClientStore();
@@ -46,10 +47,8 @@ export function Whitestone({ isSelected, opacity, isStanding, ...props }: Props)
     return (
         <group {...props} dispose={null}>
             {/* Outline mesh - only visible when selected */}
-            {isSelected && (
+            {(isSelected || isHovered) && (
                 <animated.mesh
-                    castShadow
-                    receiveShadow
                     geometry={nodes.Cube002.geometry}
                     position={position as any}
                     rotation={rotation as any}

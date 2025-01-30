@@ -21,9 +21,10 @@ type GLTFResult = GLTF & {
 type Props = GroupProps & {
     isSelected: boolean;
     opacity: number;
+    isHovered: boolean;
 };
 
-export function Whitecapstone({ isSelected, opacity, ...props }: Props) {
+export function Whitecapstone({ isSelected, opacity, isHovered, ...props }: Props) {
     const { nodes, materials } = useGLTF('/whitecapstone.glb') as GLTFResult;
 
     const { getSelectedColor } = useClientStore();
@@ -38,10 +39,9 @@ export function Whitecapstone({ isSelected, opacity, ...props }: Props) {
     return (
         <group {...props} dispose={null}>
             {/* Outline mesh - only visible when selected */}
-            {isSelected && (
+            {(isSelected || isHovered) && (
                 <mesh
-                    castShadow
-                    receiveShadow
+                   
                     geometry={nodes.Cube004.geometry}
                     position={[-0.1, -0.9, 0.2]}
                     scale={[1.05, 1.05, 1.05]} // Slightly larger than the main mesh
