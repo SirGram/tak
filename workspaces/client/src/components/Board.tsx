@@ -47,11 +47,11 @@ function TileModel({ position, color, onClick, isMovePossible, height }: TilePro
             </mesh>
 
             {/* Cylinder for the visual representation */}
-            <mesh position={[0, height + 0.1, 0]} onClick={onClickHandler}>
+            <mesh position={[0, height + 0.1, 0]} onClick={onClickHandler} >
                 <cylinderGeometry args={[0.2, 0.2, 0.05, 8]} />
                 <meshStandardMaterial
                     color={isMovePossible ? selectedColor : '#ff0000'}
-                    opacity={isMovePossible ? 0.9 : 0}
+                    opacity={isMovePossible ? 1 : 0}
                     transparent={true}
                 />
             </mesh>
@@ -113,7 +113,7 @@ export default function Board() {
         setFirstMove(true);
     };
 
-    //console.log(allowedDirections);
+    console.log("firstMove", firstMove);
 
     const selectedPiece: Piece | null =
         gameState && gameState.selectedStack.length > 0 ? gameState.selectedStack[0] : null;
@@ -140,6 +140,7 @@ export default function Board() {
     useEffect(() => {
         if (gameState?.currentPlayer) {
             setAllowedDirections(initialDirections);
+            setFirstMove(false)
         }
     }, [gameState?.currentPlayer]);
 
@@ -178,7 +179,7 @@ export default function Board() {
                 // After first round, can only select own pieces
                 if (piece.color !== playerThatPlays) return;
             }
-
+            // Piece is selected, we can change the stand
             if (piece && room && piece.id === selectedPiece?.id) {
                 if (
                     gameState!.roundNumber !== 1 &&
@@ -194,12 +195,16 @@ export default function Board() {
         ? calculateMoves(selectedPiece.id, gameState!.tiles, gameState!.pieces, allowedDirections)
         : [];
 
-    // if gameState is null, currentGameState will be null as well
 
     const isViewingHistory = gameState && showMove < gameState.history.length - 1;
     const currentGameState = isViewingHistory ? gameState.history[showMove + 1] : gameState;
     const clickablePieces = useMemo(() => {
         if (!currentGameState || !playerThatPlays) return new Set<string>();
+
+        if (firstMove) {
+            // If first move has been made within turn, cannot move pieces that are outside the stack
+            return new Set();
+        }
 
         return new Set(
             currentGameState.pieces
@@ -226,7 +231,7 @@ export default function Board() {
                 })
                 .map((piece) => piece.id)
         );
-    }, [currentGameState, playerThatPlays]);
+    }, [currentGameState, playerThatPlays, firstMove]);
 
     return (
         <>

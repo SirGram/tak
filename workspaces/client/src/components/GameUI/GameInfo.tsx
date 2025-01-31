@@ -138,7 +138,7 @@ export default function GameInfo() {
                                 <div
                                     key={`${x}-${y}`}
                                     className={`relative aspect-square flex items-center justify-center bg-gray-100 dark:bg-gray-950
-                                    ${(x + y) % 2 === 0 ? ' bg-gray-100 dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}`}>
+                                    ${(x + y) % 2 === 0 ? ' bg-gray-100 dark:bg-gray-600' : 'bg-gray-50 dark:bg-gray-500'}`}>
                                     {tile.length > 0 && lastPiece && (
                                         <>
                                             <div className="w-4/5 h-4/5 transition-transform hover:scale-110 overflow-hidden">

@@ -164,7 +164,7 @@ export default function Pieces({
 
     const [hoveredPileCounts, setHoveredPileCounts] = useState<Map<string, number>>(new Map());
     const [hoveredPieceIds, setHoveredPieceIds] = useState<Set<string>>(new Set());
-    
+
     const getPileKey = (piece: Piece3DExtended): string | null => {
         if (piece.inPile) {
             return `${piece.position[0]},${piece.position[2]}`;
@@ -199,36 +199,13 @@ export default function Pieces({
         }
     };
 
-    const handlePointerOut = (piece: Piece3DExtended) => {
-        const pileKey = getPileKey(piece);
-        if (pileKey) {
-            setHoveredPileCounts((prev) => {
-                const newMap = new Map(prev);
-                const count = newMap.get(pileKey) || 0;
-                if (count > 1) {
-                    newMap.set(pileKey, count - 1);
-                } else {
-                    newMap.delete(pileKey);
-                }
-                return newMap;
-            });
-        } else {
-            const tile = board.find(
-                (t) => t.position.x === piece.position[0] && t.position.y === piece.position[2]
-            );
-            if (tile) {
-                const index = tile.pieces.indexOf(piece.id);
-                if (index !== -1) {
-                    const idsToUnhover = tile.pieces.slice(index);
-                    setHoveredPieceIds((prev) => {
-                        const newSet = new Set(prev);
-                        idsToUnhover.forEach((id) => newSet.delete(id));
-                        return newSet;
-                    });
-                }
-            }
-        }
+    const handlePointerOut = () => {
+
+        setHoveredPieceIds(new Set());
+        setHoveredPileCounts(new Map());
     };
+    console.log("hoveredPileCounts", hoveredPileCounts);
+    console.log("hoveredPieceIds", hoveredPieceIds);
 
     return (
         <>
@@ -243,7 +220,7 @@ export default function Pieces({
                         onClick={handlePieceClick}
                         isClickable={clickablePieces.has(piece.id)}
                         onPointerOver={() => handlePointerOver(piece)}
-                        onPointerOut={() => handlePointerOut(piece)}
+                        onPointerOut={() => handlePointerOut()}
                         pileIsHovered={pileIsHovered}
                         isStackHovered={isStackHovered}
                     />
@@ -272,7 +249,6 @@ function Piece({
 }) {
     const { gameState } = useSocketStore();
     const isPieceSelected = gameState!.selectedStack.some((p) => p.id === piece.id);
-    const [isPieceHovered, setPieceHovered] = useState(false);
 
     const springProps: any = useSpring({
         position: isPieceSelected
@@ -290,7 +266,7 @@ function Piece({
                 isSelected={isPieceSelected ?? false}
                 opacity={opacity}
                 isStanding={isPieceStanding}
-                isHovered={pileIsHovered || isStackHovered || isPieceHovered}
+                isHovered={pileIsHovered || isStackHovered }
             />
         ),
         Whitestone: (
@@ -298,21 +274,21 @@ function Piece({
                 isSelected={isPieceSelected ?? false}
                 opacity={opacity}
                 isStanding={isPieceStanding}
-                isHovered={pileIsHovered || isStackHovered || isPieceHovered}
+                isHovered={pileIsHovered || isStackHovered}
             />
         ),
         Blackcapstone: (
             <Blackcapstone
                 isSelected={isPieceSelected ?? false}
                 opacity={opacity}
-                isHovered={pileIsHovered || isStackHovered || isPieceHovered}
+                isHovered={pileIsHovered || isStackHovered}
             />
         ),
         Whitecapstone: (
             <Whitecapstone
                 isSelected={isPieceSelected ?? false}
                 opacity={opacity}
-                isHovered={pileIsHovered || isStackHovered || isPieceHovered}
+                isHovered={pileIsHovered || isStackHovered}
             />
         ),
     };
@@ -330,14 +306,12 @@ function Piece({
                 e.stopPropagation();
                 if (isClickable) {
                     onPointerOver();
-                    setPieceHovered(true);
                 }
             }}
             onPointerOut={(e) => {
                 e.stopPropagation();
                 if (isClickable) {
                     onPointerOut();
-                    setPieceHovered(false);
                 }
             }}>
             {pieceModels[piece.model]}

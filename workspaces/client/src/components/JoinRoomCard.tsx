@@ -18,23 +18,6 @@ export default function JoinRoomCard() {
 
     const { mode, setMode } = useClientStore();
 
-    useEffect(() => {
-        if (urlRoomId && !hasJoined) {
-            const promptedUsername = prompt(
-                'Please introduce your username to join room ' + urlRoomId
-            );
-            if (promptedUsername) {
-                setUsername(promptedUsername);
-                joinRoom(urlRoomId, promptedUsername, mode);
-                setHasJoined(true);
-                navigate(`/${urlRoomId}`, { replace: true });
-            } else {
-                alert('Username is required to join the room.');
-                navigate('/', { replace: true });
-            }
-        }
-    }, [urlRoomId, hasJoined]);
-
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
