@@ -113,7 +113,6 @@ export default function Board() {
         setFirstMove(true);
     };
 
-    console.log("firstMove", firstMove);
 
     const selectedPiece: Piece | null =
         gameState && gameState.selectedStack.length > 0 ? gameState.selectedStack[0] : null;
@@ -149,7 +148,6 @@ export default function Board() {
     const playerThatPlays = mode === 'multiplayer' ? playerColor : gameState?.currentPlayer;
 
     function handlePieceClick(e: ThreeEvent<MouseEvent>, pieceId: string) {
-        console.log('clici')
         if (isViewingHistory) return;
         if (!playerTurn || gameState!.gameOver) return;
         e.stopPropagation();
@@ -199,7 +197,7 @@ export default function Board() {
     const isViewingHistory = gameState && showMove < gameState.history.length - 1;
     const currentGameState = isViewingHistory ? gameState.history[showMove + 1] : gameState;
     const clickablePieces = useMemo(() => {
-        if (!currentGameState || !playerThatPlays) return new Set<string>();
+        if (!currentGameState || !playerTurn) return new Set<string>();
 
         if (firstMove) {
             // If first move has been made within turn, cannot move pieces that are outside the stack

@@ -18,6 +18,7 @@ function App() {
 
     const { gameState } = useSocketStore();
 
+    function handleCanvasClick() {}
 
     return (
         <>

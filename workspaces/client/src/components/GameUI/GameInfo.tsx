@@ -82,12 +82,15 @@ export default function GameInfo() {
             return `${formattedMinutes}:${formattedSeconds}`;
         }
     }
+    
     const navigate = useNavigate();
     const handleExitRoom = () => {
-        if (room) {
-            leaveRoom(room);
-            resetSocketStore();
-            setTimeout(() => navigate('/'), 0);
+        if (window.confirm('Are you sure you want to leave the room?')) {
+            if (room) {
+                leaveRoom(room);
+                resetSocketStore();
+                setTimeout(() => navigate('/'), 0);
+            }
         }
     };
 
@@ -223,7 +226,7 @@ export default function GameInfo() {
                                         <Button
                                             onClick={handleExitRoom}
                                             variant={'destructive'}
-                                            className="m-2">
+                                            className="mx-2">
                                             Exit Room
                                         </Button>
                                     </CollapsibleContent>

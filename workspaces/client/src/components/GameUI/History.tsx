@@ -9,8 +9,6 @@ import { useToast } from '../ui/use-toast';
 export default function History() {
     const { gameState, playerColor } = useSocketStore();
     const { showMove, setShowMove } = useClientStore();
-    console.log(gameState?.history.length);
-    console.log(showMove);
     const { toast } = useToast();
 
     const playerTurn = playerColor === gameState?.currentPlayer && gameState?.gameStarted;

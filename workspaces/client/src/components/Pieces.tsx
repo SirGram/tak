@@ -204,8 +204,6 @@ export default function Pieces({
         setHoveredPieceIds(new Set());
         setHoveredPileCounts(new Map());
     };
-    console.log("hoveredPileCounts", hoveredPileCounts);
-    console.log("hoveredPieceIds", hoveredPieceIds);
 
     return (
         <>
