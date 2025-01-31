@@ -14,7 +14,7 @@ import { Candle } from '../models/Candle';
 import Pieces from './Pieces';
 import { changePieceStand, makeMove, selectStack } from '../manager/SocketManager';
 import { useSocketStore } from '../store/SocketStore';
-import { Move, Piece, Position, Position3D } from '../../../common/types';
+import { Move, Piece, Player, Position, Position3D } from '../../../common/types';
 import { useEffect, useMemo, useState } from 'react';
 import { useSettingsStore } from '../store/SettingsStore';
 
@@ -148,6 +148,7 @@ export default function Board() {
     const playerThatPlays = mode === 'multiplayer' ? playerColor : gameState?.currentPlayer;
 
     function handlePieceClick(e: ThreeEvent<MouseEvent>, pieceId: string) {
+        console.log('clici')
         if (isViewingHistory) return;
         if (!playerTurn || gameState!.gameOver) return;
         e.stopPropagation();
@@ -161,11 +162,11 @@ export default function Board() {
             if (!isPieceAtTopFromPlayer(tile, gameState!.pieces, playerThatPlays)) return;
             const pieceIndex = tile.pieces.indexOf(pieceId);
             if (pieceIndex === -1) return;
-            const selectedPieceIds = tile.pieces.slice(pieceIndex);
+            const selectedPieceIds = tile.pieces.slice(Math.max(pieceIndex, tile.pieces.length - gameState!.boardSize)); // max stack size
             const selectedPieces = selectedPieceIds
                 .map((id) => getPiece(id, gameState!.pieces))
                 .filter((p): p is Piece => p !== null);
-
+        
             if (room) selectStack(room, selectedPieces);
         } else {
             // Piece is outside the board (in a pile)
@@ -206,11 +207,14 @@ export default function Board() {
                     const tile = getTileFromPiece(piece.id, currentGameState.tiles);
 
                     if (tile) {
+                        if (gameState?.roundNumber === 1) {
+                            return false;
+                        }
                         // On-board pieces - must be top of stack and player's color
                         return isPieceAtTopFromPlayer(
                             tile,
                             currentGameState.pieces,
-                            playerThatPlays
+                            playerThatPlays as Player
                         );
                     } else {
                         // Pile pieces
