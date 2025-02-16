@@ -25,13 +25,14 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:8088/',
+    origin: '*',
   },
 });
-app.use(express.static(path.join(__dirname, '../dist')));
+const CLIENT_BUILD_PATH = path.join(__dirname, '../../client/dist');
+app.use(express.static(CLIENT_BUILD_PATH));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist'));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(CLIENT_BUILD_PATH, 'index.html'));
 });
 
 const PORT = process.env.PORT || 8080;
@@ -53,6 +54,7 @@ io.on('connection', (socket) => {
   console.log('user connected');
 
   socket.on('joinRoom', (roomId, username, mode) => {
+    console.log(socket.id, roomId, username, mode);
     handleJoinRoom(socket, roomId, username, mode);
   });
 

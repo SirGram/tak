@@ -5,6 +5,7 @@ import { useToast } from '../components/ui/use-toast';
 import { GameMode, Move, Piece, Player, ServerGameState } from '../../../common/types';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+console.log(SOCKET_URL);
 
 export const socket = io(SOCKET_URL, {
     transports: ['websocket'], // use webSocket only
@@ -101,6 +102,7 @@ export const SocketManager = () => {
 };
 
 export function joinRoom(roomId: string, username: string, mode: GameMode) {
+    console.log(roomId, username, mode)
     socket.emit('joinRoom', roomId, username, mode);
 }
 

@@ -1,29 +1,36 @@
-# Use an official Node runtime as a parent image
-FROM node:14-alpine
+FROM node:18
 
-# Install TypeScript globally
-RUN npm install -g typescript
-
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
-COPY ./server/package.json .
-COPY ./server/package*.json ./
-# Install dependencies
-RUN npm install 
+# Copy package.json and package-lock.json from both client & server
+COPY ./server/package.json ./server/
+COPY ./server/package-lock.json ./server/
+COPY ./client/package.json ./client/
+COPY ./client/package-lock.json ./client/
 
+# Disable Husky
+ENV HUSKY=0
 
-# Copy the common directory into the container
-COPY ./common /common
+# Install dependencies separately for each workspace
+RUN npm install --prefix client --ignore-scripts
+RUN npm install --prefix server --ignore-scripts
 
-# Copy the rest of the application code to the working directory
-COPY ./server .
+# Copy the entire project
+COPY . .
 
+# 🔥 Change to `client/` before running build
+WORKDIR /app/client
+RUN npm run build
 
-# Expose port 3000 to the outside world
+# 🔥 Change to `server/` before building the backend
+WORKDIR /app/server
+RUN npm run build
+
+# Remove dev dependencies to reduce image size
+RUN npm prune --production --omit=dev
+
+# Expose port 8080
 EXPOSE 8080
 
-
-# Command to run your server using ts-node
-CMD ["npm", "run", "dev"]
+# Start the server
+CMD ["npm", "run", "start"]
