@@ -20,3 +20,6 @@ primary_region = 'mad'
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
+[build.args]
+  VITE_SOCKET_URL = "https://tak.fly.dev/"
+
